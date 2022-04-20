@@ -3,28 +3,40 @@ package backend;
 public enum Color {
     WHITE {
         @Override
-        public Color next() {
+        Color next() {
             return BLACK;
         }
 
         @Override
-        public Color previous() {
+        Color previous() {
             return BLACK;
+        }
+
+        @Override
+        String code() {
+            return "b";
         }
     },
     BLACK {
         @Override
-        public Color next() {
+        Color next() {
             return WHITE;
         }
 
         @Override
-        public Color previous() {
+        Color previous() {
             return WHITE;
+        }
+
+        @Override
+        String code() {
+            return "w";
         }
     };
 
-    public abstract Color next();
+    abstract Color next();
 
-    public abstract Color previous();
+    abstract Color previous();
+
+    abstract String code();
 }

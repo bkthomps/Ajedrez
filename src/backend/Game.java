@@ -9,12 +9,12 @@ public final class Game {
     }
 
     public Game(Color playerColor) {
-        this(playerColor, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        this(String.format("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR %s KQkq - 0 1", playerColor.code()));
     }
 
-    public Game(Color playerColor, String fen) {
-        userColor = playerColor;
+    public Game(String fen) {
         board = new Board(fen);
+        userColor = board.activePlayer;
     }
 
     public State generateMoves() {
