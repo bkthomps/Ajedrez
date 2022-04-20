@@ -15,8 +15,7 @@ public final class Piece {
                 }
                 var moves = new ArrayList<Move>();
                 pawnJump(position, board, piece).ifPresent(moves::add);
-                moves.addAll(normalMoves(position, board, piece));
-                enPassant(position, board, piece).ifPresent(moves::add);
+                moves.addAll(otherMoves(position, board, piece));
                 return moves;
             }
 
@@ -59,7 +58,7 @@ public final class Piece {
                 return Optional.empty();
             }
 
-            private List<Move> normalMoves(Position position, Board board, Piece piece) {
+            private List<Move> otherMoves(Position position, Board board, Piece piece) {
                 var moves = new ArrayList<Move>();
                 var nextRow = position.row + piece.color.pawnMove();
                 var advance = new Position(nextRow, position.column);
@@ -71,6 +70,9 @@ public final class Piece {
                 var captures = new Position[]{captureLeft, captureRight};
                 for (var capture : captures) {
                     if (board.get(capture).isEmpty()) {
+                        if (capture.equals(board.enPassantTarget)) {
+                            moves.add(new EnPassant(position, capture, board.enPassantTarget));
+                        }
                         continue;
                     }
                     var capturePiece = board.get(capture).get();
@@ -80,19 +82,31 @@ public final class Piece {
                 }
                 return moves;
             }
-
-            private Optional<Move> enPassant(Position position, Board board, Piece piece) {
-                // TODO: implement
-                return Optional.empty();
-            }
         },
+
         KNIGHT {
             @Override
-            List<Move> possibleMoves(Position position, Board board) {
-                // TODO: implement
-                return new ArrayList<>();
+            List<Move> possibleMoves(Position start, Board board) {
+                var positions = new Position[]{
+                        new Position(start.row - 2, start.column - 1),
+                        new Position(start.row - 2, start.column + 1),
+                        new Position(start.row - 1, start.column - 2),
+                        new Position(start.row - 1, start.column + 2),
+                        new Position(start.row + 1, start.column - 2),
+                        new Position(start.row + 1, start.column + 2),
+                        new Position(start.row + 2, start.column - 1),
+                        new Position(start.row + 2, start.column + 1),
+                };
+                var moves = new ArrayList<Move>();
+                for (var end : positions) {
+                    if (board.isFree(end) || board.isEnemy(end)) {
+                        moves.add(new RegularMove(start, end));
+                    }
+                }
+                return moves;
             }
         },
+
         BISHOP {
             @Override
             List<Move> possibleMoves(Position position, Board board) {
@@ -100,6 +114,7 @@ public final class Piece {
                 return new ArrayList<>();
             }
         },
+
         ROOK {
             @Override
             List<Move> possibleMoves(Position position, Board board) {
@@ -107,6 +122,7 @@ public final class Piece {
                 return new ArrayList<>();
             }
         },
+
         QUEEN {
             @Override
             List<Move> possibleMoves(Position position, Board board) {
@@ -114,6 +130,7 @@ public final class Piece {
                 return new ArrayList<>();
             }
         },
+
         KING {
             @Override
             List<Move> possibleMoves(Position position, Board board) {

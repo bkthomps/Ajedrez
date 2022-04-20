@@ -12,4 +12,11 @@ public final class Position {
         this.row = row;
         this.column = column;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof Position that
+                && row == that.row
+                && column == that.column;
+    }
 }

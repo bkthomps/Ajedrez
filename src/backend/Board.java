@@ -92,11 +92,13 @@ final class Board {
         // TODO: parse algebraic notation of where it can be captured
     }
 
+    private boolean isSquare(Position position) {
+        return position.row >= 0 && position.row < ROW_COUNT
+                && position.column >= 0 && position.column < COLUMN_COUNT;
+    }
+
     Optional<Piece> get(Position position) {
-        if (position.row < 0 || position.row >= ROW_COUNT) {
-            return Optional.empty();
-        }
-        if (position.column < 0 || position.column >= COLUMN_COUNT) {
+        if (!isSquare(position)) {
             return Optional.empty();
         }
         var piece = squares[position.row][position.column];
@@ -104,5 +106,13 @@ final class Board {
             return Optional.empty();
         }
         return Optional.of(piece);
+    }
+
+    boolean isFree(Position position) {
+        return isSquare(position) && squares[position.row][position.column] == null;
+    }
+
+    boolean isEnemy(Position position) {
+        return get(position).isPresent() && get(position).get().color != activePlayer;
     }
 }
