@@ -21,11 +21,16 @@ public final class Game {
     public State generateMoves() {
         // Black pawns advance by increasing the row value
         var alliedPositions = getAlliedPiecePositions();
-        var alliedKingPosition = getKingPosition(alliedPositions);
-        // TODO: check if checkmate or stalemate or draw
-        // TODO: for each piece, check where it can move
-        // TODO: for each possible move, find out legal moves (won't put king in check)
-        throw new IllegalStateException("TODO");
+        var kingPosition = getKingPosition(alliedPositions);
+        var possibleMoves = possibleMoves(alliedPositions);
+        var legalMoves = legalMoves(possibleMoves, kingPosition);
+        var isKingChecked = isKingChecked(kingPosition);
+        if (legalMoves.isEmpty()) {
+            var terminalState = isKingChecked ? State.Type.CHECKMATE : State.Type.STALEMATE;
+            return new State(terminalState, legalMoves);
+        }
+        var regularState = isKingChecked ? State.Type.CHECK : State.Type.NORMAL;
+        return new State(regularState, legalMoves);
     }
 
     private List<Position> getAlliedPiecePositions() {
@@ -49,5 +54,35 @@ public final class Game {
             }
         }
         throw new IllegalStateException("No allied king");
+    }
+
+    private List<Move> possibleMoves(List<Position> alliedPositions) {
+        var moves = new ArrayList<Move>();
+        for (var position : alliedPositions) {
+            var piece = board.squares[position.row][position.column];
+            if (piece == null) {
+                continue;
+            }
+            moves.addAll(piece.type.possibleMoves(position, board));
+        }
+        return moves;
+    }
+
+    private List<Move> legalMoves(List<Move> possibleMoves, Position king) {
+        var moves = new ArrayList<Move>();
+        for (var move : possibleMoves) {
+            move.doMove(board);
+            var isLegal = !isKingChecked(king);
+            move.undo(board);
+            if (isLegal) {
+                moves.add(move);
+            }
+        }
+        return moves;
+    }
+
+    private boolean isKingChecked(Position king) {
+        // TODO: implement
+        return false;
     }
 }

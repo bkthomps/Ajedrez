@@ -1,13 +1,53 @@
 package backend;
 
+import java.util.List;
+
 public final class Piece {
     public enum Type {
-        PAWN,
-        KNIGHT,
-        BISHOP,
-        ROOK,
-        QUEEN,
-        KING
+        PAWN {
+            @Override
+            List<Move> possibleMoves(Position position, Board board) {
+                // TODO: implement
+                return IllegalStateException("Not Implementd");
+            }
+        },
+        KNIGHT {
+            @Override
+            List<Move> possibleMoves(Position position, Board board) {
+                // TODO: implement
+                return IllegalStateException("Not Implementd");
+            }
+        },
+        BISHOP {
+            @Override
+            List<Move> possibleMoves(Position position, Board board) {
+                // TODO: implement
+                return IllegalStateException("Not Implementd");
+            }
+        },
+        ROOK {
+            @Override
+            List<Move> possibleMoves(Position position, Board board) {
+                // TODO: implement
+                return IllegalStateException("Not Implementd");
+            }
+        },
+        QUEEN {
+            @Override
+            List<Move> possibleMoves(Position position, Board board) {
+                // TODO: implement
+                return IllegalStateException("Not Implementd");
+            }
+        },
+        KING {
+            @Override
+            List<Move> possibleMoves(Position position, Board board) {
+                // TODO: implement
+                return IllegalStateException("Not Implementd");
+            }
+        };
+
+        abstract List<Move> possibleMoves(Position position, Board board);
     }
 
     public final Type type;

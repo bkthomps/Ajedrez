@@ -3,7 +3,7 @@ package backend;
 import java.util.List;
 
 public final class State {
-    private enum Type {
+    enum Type {
         CHECKMATE,
         STALEMATE,
         DRAW_INSUFFICIENT_MATING,

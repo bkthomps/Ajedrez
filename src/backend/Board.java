@@ -93,6 +93,6 @@ final class Board {
         if (target.equals("-")) {
             return;
         }
-        // TODO: parse algebraic notation of where it can be captureed
+        // TODO: parse algebraic notation of where it can be captured
     }
 }
