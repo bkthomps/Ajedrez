@@ -19,7 +19,6 @@ public final class Game {
     }
 
     public State generateMoves() {
-        // Black pawns advance by increasing the row value
         var alliedPositions = getAlliedPiecePositions();
         var kingPosition = getKingPosition(alliedPositions);
         var possibleMoves = possibleMoves(alliedPositions);

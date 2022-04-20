@@ -1,6 +1,7 @@
 package backend;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 final class Board {
@@ -94,5 +95,19 @@ final class Board {
             return;
         }
         // TODO: parse algebraic notation of where it can be captured
+    }
+
+    Optional<Piece> get(Position position) {
+        if (position.row < 0 || position.row >= ROW_COUNT) {
+            return Optional.empty();
+        }
+        if (position.column < 0 || position.column >= COLUMN_COUNT) {
+            return Optional.empty();
+        }
+        var piece = squares[position.row][position.column];
+        if (piece == null) {
+            return Optional.empty();
+        }
+        return Optional.of(piece);
     }
 }
