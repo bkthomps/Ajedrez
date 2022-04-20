@@ -4,8 +4,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 final class Board {
-    private static final int ROW_COUNT = 8;
-    private static final int COLUMN_COUNT = 8;
+    static final int ROW_COUNT = 8;
+    static final int COLUMN_COUNT = 8;
 
     final Piece[][] squares = new Piece[ROW_COUNT][COLUMN_COUNT];
     Set<Color> canCastleShort = new HashSet<>();
