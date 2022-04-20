@@ -7,6 +7,7 @@ public abstract class Move {
     public final Position start;
     public final Position end;
 
+    Piece captured;
     private boolean didMove;
     private Position oldEnPassantTarget;
 
@@ -43,7 +44,6 @@ public abstract class Move {
 
 final class PawnPromotion extends Move {
     private final Piece promotion;
-    private Piece captured;
 
     PawnPromotion(Position start, Position end, Piece promotion) {
         super(start, end);
@@ -73,7 +73,6 @@ final class PawnPromotion extends Move {
 
 final class EnPassant extends Move {
     private final Position pawnCapture;
-    private Piece capturedPawn;
 
     EnPassant(Position start, Position end, Position pawnCapture) {
         super(start, end);
@@ -90,7 +89,7 @@ final class EnPassant extends Move {
         super.doMove(board);
         board.squares[end.row][end.column] = board.squares[start.row][start.column];
         board.squares[start.row][start.column] = null;
-        capturedPawn = board.squares[pawnCapture.row][pawnCapture.column];
+        captured = board.squares[pawnCapture.row][pawnCapture.column];
         board.squares[pawnCapture.row][pawnCapture.column] = null;
     }
 
@@ -99,13 +98,11 @@ final class EnPassant extends Move {
         super.undo(board);
         board.squares[start.row][start.column] = board.squares[end.row][end.column];
         board.squares[end.row][end.column] = null;
-        board.squares[pawnCapture.row][pawnCapture.column] = capturedPawn;
+        board.squares[pawnCapture.row][pawnCapture.column] = captured;
     }
 }
 
 class RegularMove extends Move {
-    private Piece captured;
-
     RegularMove(Position start, Position end) {
         super(start, end);
     }
