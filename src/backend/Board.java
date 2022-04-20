@@ -76,16 +76,11 @@ final class Board {
         }
         for (char c : castlingRights.toCharArray()) {
             switch (c) {
-                case 'K':
-                    canCastleShort.add(Color.WHITE);
-                case 'Q':
-                    canCastleLong.add(Color.WHITE);
-                case 'k':
-                    canCastleShort.add(Color.WHITE);
-                case 'q':
-                    canCastleLong.add(Color.WHITE);
-                default:
-                    throw new IllegalArgumentException("The fen string is malformed");
+                case 'K' -> canCastleShort.add(Color.WHITE);
+                case 'Q' -> canCastleLong.add(Color.WHITE);
+                case 'k' -> canCastleShort.add(Color.BLACK);
+                case 'q' -> canCastleLong.add(Color.BLACK);
+                default -> throw new IllegalArgumentException("The fen string is malformed");
             }
         }
     }

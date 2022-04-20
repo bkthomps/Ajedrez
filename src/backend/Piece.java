@@ -90,35 +90,35 @@ public final class Piece {
             @Override
             List<Move> possibleMoves(Position position, Board board) {
                 // TODO: implement
-                throw new IllegalStateException("Not Implemented");
+                return new ArrayList<>();
             }
         },
         BISHOP {
             @Override
             List<Move> possibleMoves(Position position, Board board) {
                 // TODO: implement
-                throw new IllegalStateException("Not Implemented");
+                return new ArrayList<>();
             }
         },
         ROOK {
             @Override
             List<Move> possibleMoves(Position position, Board board) {
                 // TODO: implement
-                throw new IllegalStateException("Not Implemented");
+                return new ArrayList<>();
             }
         },
         QUEEN {
             @Override
             List<Move> possibleMoves(Position position, Board board) {
                 // TODO: implement
-                throw new IllegalStateException("Not Implemented");
+                return new ArrayList<>();
             }
         },
         KING {
             @Override
             List<Move> possibleMoves(Position position, Board board) {
                 // TODO: implement
-                throw new IllegalStateException("Not Implemented");
+                return new ArrayList<>();
             }
         };
 
