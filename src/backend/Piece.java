@@ -13,6 +13,10 @@ public final class Piece {
     public final Type type;
     public final Color color;
 
+    private Piece() {
+        throw new IllegalStateException("Disable default constructor");
+    }
+
     Piece(Type type, Color color) {
         this.type = type;
         this.color = color;

@@ -1,197 +1,53 @@
 package backend;
 
 import java.util.Optional;
+import java.util.Set;
 
-public interface Move {
-    Position start();
+public abstract class Move {
+    public final Position start;
+    public final Position end;
 
-    Position end();
-
-    Optional<Piece.Type> promotionPieceType();
-
-    void doMove(Piece[][] board);
-
-    void undo(Piece[][] board);
-}
-
-final class Regular implements Move {
-    private final Position start;
-    private final Position end;
     private boolean didMove;
-    private Piece captured;
+    private Position oldEnPassantTarget;
 
-    Regular(Position start, Position end) {
+    private Move() {
+        throw new IllegalStateException("Disable default constructor");
+    }
+
+    Move(Position start, Position end) {
         this.start = start;
         this.end = end;
     }
 
-    @Override
-    public Position start() {
-        return start;
-    }
+    abstract Optional<Piece.Type> promotionPieceType();
 
-    @Override
-    public Position end() {
-        return end;
-    }
-
-    @Override
-    public Optional<Piece.Type> promotionPieceType() {
-        return Optional.empty();
-    }
-
-    @Override
-    public void doMove(Piece[][] board) {
+    void doMove(Board board) {
         if (didMove) {
             throw new IllegalStateException("Move already performed");
         }
         didMove = true;
-        captured = board[end.row][end.column];
-        board[end.row][end.column] = board[start.row][start.column];
-        board[start.row][start.column] = null;
+        board.activePlayer = board.activePlayer.next();
+        oldEnPassantTarget = board.enPassantTarget;
+        board.enPassantTarget = null;
     }
 
-    @Override
-    public void undo(Piece[][] board) {
+    void undo(Board board) {
         if (!didMove) {
             throw new IllegalStateException("Move not yet performed");
         }
         didMove = false;
-        board[start.row][start.column] = board[end.row][end.column];
-        board[end.row][end.column] = captured;
+        board.activePlayer = board.activePlayer.previous();
+        board.enPassantTarget = oldEnPassantTarget;
     }
 }
 
-final class EnPassant implements Move {
-    private final Position start;
-    private final Position end;
-    private final Position pawnCapture;
-    private boolean didMove;
-    private Piece capturedPawn;
-
-    EnPassant(Position start, Position end, Position pawnCapture) {
-        this.start = start;
-        this.end = end;
-        this.pawnCapture = pawnCapture;
-    }
-
-    @Override
-    public Position start() {
-        return start;
-    }
-
-    @Override
-    public Position end() {
-        return end;
-    }
-
-    @Override
-    public Optional<Piece.Type> promotionPieceType() {
-        return Optional.empty();
-    }
-
-    @Override
-    public void doMove(Piece[][] board) {
-        if (didMove) {
-            throw new IllegalStateException("Move already performed");
-        }
-        didMove = true;
-        board[end.row][end.column] = board[start.row][start.column];
-        board[start.row][start.column] = null;
-        capturedPawn = board[pawnCapture.row][pawnCapture.column];
-        board[pawnCapture.row][pawnCapture.column] = null;
-    }
-
-    @Override
-    public void undo(Piece[][] board) {
-        if (!didMove) {
-            throw new IllegalStateException("Move not yet performed");
-        }
-        didMove = false;
-        board[start.row][start.column] = board[end.row][end.column];
-        board[end.row][end.column] = null;
-        board[pawnCapture.row][pawnCapture.column] = capturedPawn;
-    }
-}
-
-final class Castling implements Move {
-    private Position kingStart;
-    private Position kingEnd;
-    private Position rookStart;
-    private Position rookEnd;
-    private boolean didMove;
-
-    void kingMovement(Position kingStart, Position kingEnd) {
-        this.kingStart = kingStart;
-        this.kingEnd = kingEnd;
-    }
-
-    void rookMovement(Position rookStart, Position rookEnd) {
-        this.rookStart = rookStart;
-        this.rookEnd = rookEnd;
-    }
-
-    @Override
-    public Position start() {
-        return kingStart;
-    }
-
-    @Override
-    public Position end() {
-        return kingEnd;
-    }
-
-    @Override
-    public Optional<Piece.Type> promotionPieceType() {
-        return Optional.empty();
-    }
-
-    @Override
-    public void doMove(Piece[][] board) {
-        if (didMove) {
-            throw new IllegalStateException("Move already performed");
-        }
-        didMove = true;
-        board[kingEnd.row][kingEnd.column] = board[kingStart.row][kingStart.column];
-        board[kingStart.row][kingStart.column] = null;
-        board[rookEnd.row][rookEnd.column] = board[rookStart.row][rookStart.column];
-        board[rookStart.row][rookStart.column] = null;
-    }
-
-    @Override
-    public void undo(Piece[][] board) {
-        if (!didMove) {
-            throw new IllegalStateException("Move not yet performed");
-        }
-        didMove = false;
-        board[kingStart.row][kingStart.column] = board[kingEnd.row][kingEnd.column];
-        board[kingEnd.row][kingEnd.column] = null;
-        board[rookStart.row][rookStart.column] = board[rookEnd.row][rookEnd.column];
-        board[rookEnd.row][rookEnd.column] = null;
-    }
-}
-
-final class PawnPromotion implements Move {
-    private final Position start;
-    private final Position end;
+final class PawnPromotion extends Move {
     private final Piece promotion;
-    private boolean didMove;
     private Piece captured;
 
     PawnPromotion(Position start, Position end, Piece promotion) {
-        this.start = start;
-        this.end = end;
+        super(start, end);
         this.promotion = promotion;
-    }
-
-    @Override
-    public Position start() {
-        return start;
-    }
-
-    @Override
-    public Position end() {
-        return end;
     }
 
     @Override
@@ -200,23 +56,187 @@ final class PawnPromotion implements Move {
     }
 
     @Override
-    public void doMove(Piece[][] board) {
-        if (didMove) {
-            throw new IllegalStateException("Move already performed");
-        }
-        didMove = true;
-        captured = board[end.row][end.column];
-        board[end.row][end.column] = promotion;
-        board[start.row][start.column] = null;
+    public void doMove(Board board) {
+        super.doMove(board);
+        captured = board.squares[end.row][end.column];
+        board.squares[end.row][end.column] = promotion;
+        board.squares[start.row][start.column] = null;
     }
 
     @Override
-    public void undo(Piece[][] board) {
-        if (!didMove) {
-            throw new IllegalStateException("Move not yet performed");
-        }
-        didMove = false;
-        board[start.row][start.column] = board[end.row][end.column];
-        board[end.row][end.column] = captured;
+    public void undo(Board board) {
+        super.undo(board);
+        board.squares[start.row][start.column] = board.squares[end.row][end.column];
+        board.squares[end.row][end.column] = captured;
+    }
+}
+
+final class EnPassant extends Move {
+    private final Position pawnCapture;
+    private Piece capturedPawn;
+
+    EnPassant(Position start, Position end, Position pawnCapture) {
+        super(start, end);
+        this.pawnCapture = pawnCapture;
+    }
+
+    @Override
+    public Optional<Piece.Type> promotionPieceType() {
+        return Optional.empty();
+    }
+
+    @Override
+    public void doMove(Board board) {
+        super.doMove(board);
+        board.squares[end.row][end.column] = board.squares[start.row][start.column];
+        board.squares[start.row][start.column] = null;
+        capturedPawn = board.squares[pawnCapture.row][pawnCapture.column];
+        board.squares[pawnCapture.row][pawnCapture.column] = null;
+    }
+
+    @Override
+    public void undo(Board board) {
+        super.undo(board);
+        board.squares[start.row][start.column] = board.squares[end.row][end.column];
+        board.squares[end.row][end.column] = null;
+        board.squares[pawnCapture.row][pawnCapture.column] = capturedPawn;
+    }
+}
+
+class RegularMove extends Move {
+    private Piece captured;
+
+    RegularMove(Position start, Position end) {
+        super(start, end);
+    }
+
+    @Override
+    public Optional<Piece.Type> promotionPieceType() {
+        return Optional.empty();
+    }
+
+    @Override
+    public void doMove(Board board) {
+        super.doMove(board);
+        captured = board.squares[end.row][end.column];
+        board.squares[end.row][end.column] = board.squares[start.row][start.column];
+        board.squares[start.row][start.column] = null;
+    }
+
+    @Override
+    public void undo(Board board) {
+        super.undo(board);
+        board.squares[start.row][start.column] = board.squares[end.row][end.column];
+        board.squares[end.row][end.column] = captured;
+    }
+}
+
+class PawnJump extends RegularMove {
+    private final Position jumpingOver;
+
+    PawnJump(Position start, Position end, Position jumpingOver) {
+        super(start, end);
+        this.jumpingOver = jumpingOver;
+    }
+
+    @Override
+    public void doMove(Board board) {
+        super.doMove(board);
+        board.enPassantTarget = jumpingOver;
+    }
+}
+
+class ShortRookMove extends RegularMove {
+    private Set<Color> oldCanCastleShort;
+
+    ShortRookMove(Position start, Position end) {
+        super(start, end);
+    }
+
+    @Override
+    public void doMove(Board board) {
+        var activePlayer = board.activePlayer;
+        super.doMove(board);
+        oldCanCastleShort = Set.copyOf(board.canCastleShort);
+        board.canCastleShort.remove(activePlayer);
+    }
+
+    @Override
+    public void undo(Board board) {
+        super.undo(board);
+        board.canCastleShort = oldCanCastleShort;
+    }
+}
+
+class LongRookMove extends RegularMove {
+    private Set<Color> oldCanCastleLong;
+
+    LongRookMove(Position start, Position end) {
+        super(start, end);
+    }
+
+    @Override
+    public void doMove(Board board) {
+        var activePlayer = board.activePlayer;
+        super.doMove(board);
+        oldCanCastleLong = Set.copyOf(board.canCastleLong);
+        board.canCastleLong.remove(activePlayer);
+    }
+
+    @Override
+    public void undo(Board board) {
+        super.undo(board);
+        board.canCastleLong = oldCanCastleLong;
+    }
+}
+
+class KingMove extends RegularMove {
+    private Set<Color> oldCanCastleShort;
+    private Set<Color> oldCanCastleLong;
+
+    KingMove(Position start, Position end) {
+        super(start, end);
+    }
+
+    @Override
+    public void doMove(Board board) {
+        var activePlayer = board.activePlayer;
+        super.doMove(board);
+        oldCanCastleShort = Set.copyOf(board.canCastleShort);
+        oldCanCastleLong = Set.copyOf(board.canCastleLong);
+        board.canCastleShort.remove(activePlayer);
+        board.canCastleLong.remove(activePlayer);
+    }
+
+    @Override
+    public void undo(Board board) {
+        super.undo(board);
+        board.canCastleShort = oldCanCastleShort;
+        board.canCastleLong = oldCanCastleLong;
+    }
+}
+
+final class Castling extends KingMove {
+    private final Position rookStart;
+    private final Position rookEnd;
+
+    Castling(Position kingStart, Position kingEnd, Position rookStart, Position rookEnd) {
+        super(kingStart, kingEnd);
+        this.rookStart = rookStart;
+        this.rookEnd = rookEnd;
+    }
+
+    @Override
+    public void doMove(Board board) {
+        super.doMove(board);
+        board.squares[rookEnd.row][rookEnd.column] = board.squares[rookStart.row][rookStart.column];
+        board.squares[rookStart.row][rookStart.column] = null;
+    }
+
+    @Override
+    public void undo(Board board) {
+        super.undo(board);
+        board.squares[rookStart.row][rookStart.column] = board.squares[rookEnd.row][rookEnd.column];
+        board.squares[rookEnd.row][rookEnd.column] = null;
     }
 }
