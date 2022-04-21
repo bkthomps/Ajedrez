@@ -133,9 +133,24 @@ public final class Piece {
 
         KING {
             @Override
-            List<Move> possibleMoves(Position position, Board board) {
-                // TODO: implement
-                return new ArrayList<>();
+            List<Move> possibleMoves(Position start, Board board) {
+                var positions = new Position[]{
+                        new Position(start.row - 1, start.column - 1),
+                        new Position(start.row - 1, start.column),
+                        new Position(start.row - 1, start.column + 1),
+                        new Position(start.row, start.column - 1),
+                        new Position(start.row, start.column + 1),
+                        new Position(start.row + 1, start.column - 1),
+                        new Position(start.row + 1, start.column),
+                        new Position(start.row + 1, start.column + 1),
+                };
+                var moves = new ArrayList<Move>();
+                for (var end : positions) {
+                    if (board.isFree(end) || board.isEnemy(end)) {
+                        moves.add(new RegularMove(start, end));
+                    }
+                }
+                return moves;
             }
         };
 

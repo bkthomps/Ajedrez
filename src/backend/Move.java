@@ -7,7 +7,6 @@ public abstract class Move {
     public final Position start;
     public final Position end;
 
-    Piece captured;
     private boolean didMove;
     private Position oldEnPassantTarget;
 
@@ -43,6 +42,7 @@ public abstract class Move {
 }
 
 final class PawnPromotion extends Move {
+    private Piece captured;
     private final Piece promotion;
 
     PawnPromotion(Position start, Position end, Piece promotion) {
@@ -72,6 +72,7 @@ final class PawnPromotion extends Move {
 }
 
 final class EnPassant extends Move {
+    private Piece captured;
     private final Position pawnCapture;
 
     EnPassant(Position start, Position end, Position pawnCapture) {
@@ -103,6 +104,8 @@ final class EnPassant extends Move {
 }
 
 class RegularMove extends Move {
+    private Piece captured;
+
     RegularMove(Position start, Position end) {
         super(start, end);
     }
