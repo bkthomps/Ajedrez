@@ -1,5 +1,6 @@
 package backend;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -157,7 +158,7 @@ class ShortRookMove extends RegularMove {
     public void doMove(Board board) {
         var activePlayer = board.activePlayer;
         super.doMove(board);
-        oldCanCastleShort = Set.copyOf(board.canCastleShort);
+        oldCanCastleShort = new HashSet<>(board.canCastleShort);
         board.canCastleShort.remove(activePlayer);
     }
 
@@ -179,7 +180,7 @@ class LongRookMove extends RegularMove {
     public void doMove(Board board) {
         var activePlayer = board.activePlayer;
         super.doMove(board);
-        oldCanCastleLong = Set.copyOf(board.canCastleLong);
+        oldCanCastleLong = new HashSet<>(board.canCastleLong);
         board.canCastleLong.remove(activePlayer);
     }
 
@@ -202,8 +203,8 @@ class KingMove extends RegularMove {
     public void doMove(Board board) {
         var activePlayer = board.activePlayer;
         super.doMove(board);
-        oldCanCastleShort = Set.copyOf(board.canCastleShort);
-        oldCanCastleLong = Set.copyOf(board.canCastleLong);
+        oldCanCastleShort = new HashSet<>(board.canCastleShort);
+        oldCanCastleLong = new HashSet<>(board.canCastleLong);
         board.canCastleShort.remove(activePlayer);
         board.canCastleLong.remove(activePlayer);
     }
