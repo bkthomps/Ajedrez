@@ -14,7 +14,9 @@ public final class Piece {
                     return pawnPromotions(position, board, piece);
                 }
                 var moves = new ArrayList<Move>();
-                pawnJump(position, board, piece).ifPresent(moves::add);
+                if (position.row == piece.color.pawnsRow()) {
+                    pawnJump(position, board, piece).ifPresent(moves::add);
+                }
                 moves.addAll(otherMoves(position, board, piece));
                 return moves;
             }

@@ -22,9 +22,8 @@ public final class Game {
         var user = board.activePlayer;
         var alliedPositions = getPiecePositions(user);
         var possibleMoves = possibleMoves(alliedPositions);
-        var alliedKing = getKingPosition(alliedPositions);
-        var legalMoves = legalMoves(possibleMoves, alliedKing, user);
-        var isKingChecked = isKingChecked(alliedKing, user);
+        var legalMoves = legalMoves(possibleMoves, user);
+        var isKingChecked = isKingChecked(user);
         if (legalMoves.isEmpty()) {
             var terminalState = isKingChecked ? State.Type.CHECKMATE : State.Type.STALEMATE;
             return new State(terminalState, legalMoves);
@@ -49,30 +48,27 @@ public final class Game {
     private List<Move> possibleMoves(List<Position> alliedPositions) {
         var moves = new ArrayList<Move>();
         for (var position : alliedPositions) {
-            var piece = board.get(position);
-            if (piece.isEmpty()) {
-                continue;
-            }
-            moves.addAll(piece.get().type.possibleMoves(position, board));
+            var piece = board.get(position).orElseThrow();
+            moves.addAll(piece.type.possibleMoves(position, board));
         }
         return moves;
     }
 
     private Position getKingPosition(List<Position> piecePositions) {
         for (var position : piecePositions) {
-            var piece = board.get(position);
-            if (piece.isPresent() && piece.get().type == Piece.Type.KING) {
+            var piece = board.get(position).orElseThrow();
+            if (piece.type == Piece.Type.KING) {
                 return position;
             }
         }
         throw new IllegalStateException("No allied king");
     }
 
-    private List<Move> legalMoves(List<Move> possibleMoves, Position alliedKing, Color user) {
+    private List<Move> legalMoves(List<Move> possibleMoves, Color user) {
         var moves = new ArrayList<Move>();
         for (var move : possibleMoves) {
             move.doMove(board);
-            var isLegal = !isKingChecked(alliedKing, user);
+            var isLegal = !isKingChecked(user);
             move.undo(board);
             if (isLegal) {
                 moves.add(move);
@@ -81,14 +77,13 @@ public final class Game {
         return moves;
     }
 
-    private boolean isKingChecked(Position alliedKing, Color user) {
+    private boolean isKingChecked(Color user) {
+        var allies = getPiecePositions(user);
+        var alliedKing = getKingPosition(allies);
         var enemies = getPiecePositions(user.next());
         for (var enemyPosition : enemies) {
-            var enemyPiece = board.get(enemyPosition);
-            if (enemyPiece.isEmpty()) {
-                continue;
-            }
-            var moves = enemyPiece.get().type.possibleMoves(enemyPosition, board);
+            var enemyPiece = board.get(enemyPosition).orElseThrow();
+            var moves = enemyPiece.type.possibleMoves(enemyPosition, board);
             for (var move : moves) {
                 if (move.end.equals(alliedKing)) {
                     return true;
