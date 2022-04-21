@@ -110,24 +110,33 @@ public final class Piece {
         BISHOP {
             @Override
             List<Move> possibleMoves(Position position, Board board) {
-                // TODO: implement
-                return new ArrayList<>();
+                return bishopMoves(position, board);
             }
         },
 
         ROOK {
             @Override
             List<Move> possibleMoves(Position position, Board board) {
-                // TODO: implement
-                return new ArrayList<>();
+                var piece = board.get(position).orElseThrow();
+                if (position.row == piece.color.piecesRow()) {
+                    if (position.column == Board.COLUMN_COUNT - 1) {
+                        return rookMoves(position, board, MoveType.SHORT_ROOK_MOVE);
+                    }
+                    if (position.column == 0) {
+                        return rookMoves(position, board, MoveType.LONG_ROOK_MOVE);
+                    }
+                }
+                return rookMoves(position, board, MoveType.REGULAR_MOVE);
             }
         },
 
         QUEEN {
             @Override
             List<Move> possibleMoves(Position position, Board board) {
-                // TODO: implement
-                return new ArrayList<>();
+                var moves = new ArrayList<Move>();
+                moves.addAll(bishopMoves(position, board));
+                moves.addAll(rookMoves(position, board, MoveType.REGULAR_MOVE));
+                return moves;
             }
         },
 
@@ -156,6 +165,47 @@ public final class Piece {
 
         // The moves which can be made, including those that the king moves into check
         abstract List<Move> possibleMoves(Position position, Board board);
+
+        private enum MoveType {
+            SHORT_ROOK_MOVE,
+            LONG_ROOK_MOVE,
+            REGULAR_MOVE
+        }
+
+        private static List<Move> rookMoves(Position position, Board board, MoveType moveType) {
+            var moves = new ArrayList<Move>();
+            moves.addAll(directionalMovement(position, board, moveType, 1, 0));
+            moves.addAll(directionalMovement(position, board, moveType, -1, 0));
+            moves.addAll(directionalMovement(position, board, moveType, 0, 1));
+            moves.addAll(directionalMovement(position, board, moveType, 0, -1));
+            return moves;
+        }
+
+        private static List<Move> bishopMoves(Position position, Board board) {
+            var moves = new ArrayList<Move>();
+            moves.addAll(directionalMovement(position, board, MoveType.REGULAR_MOVE, -1, -1));
+            moves.addAll(directionalMovement(position, board, MoveType.REGULAR_MOVE, -1, 1));
+            moves.addAll(directionalMovement(position, board, MoveType.REGULAR_MOVE, 1, -1));
+            moves.addAll(directionalMovement(position, board, MoveType.REGULAR_MOVE, 1, 1));
+            return moves;
+        }
+
+        private static List<Move> directionalMovement(Position start, Board board, MoveType move, int row, int column) {
+            var moves = new ArrayList<Move>();
+            var position = new Position(start.row + row, start.column + column);
+            while (board.isFree(position)) {
+                switch (move) {
+                    case SHORT_ROOK_MOVE -> moves.add(new ShortRookMove(start, position));
+                    case LONG_ROOK_MOVE -> moves.add(new LongRookMove(start, position));
+                    case REGULAR_MOVE -> moves.add(new RegularMove(start, position));
+                }
+                position = new Position(position.row + row, position.column + column);
+            }
+            if (board.isEnemy(position)) {
+                moves.add(new RegularMove(start, position));
+            }
+            return moves;
+        }
     }
 
     public final Type type;
