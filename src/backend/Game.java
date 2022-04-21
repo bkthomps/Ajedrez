@@ -49,19 +49,19 @@ public final class Game {
     private List<Move> possibleMoves(List<Position> alliedPositions) {
         var moves = new ArrayList<Move>();
         for (var position : alliedPositions) {
-            var piece = board.squares[position.row][position.column];
-            if (piece == null) {
+            var piece = board.get(position);
+            if (piece.isEmpty()) {
                 continue;
             }
-            moves.addAll(piece.type.possibleMoves(position, board));
+            moves.addAll(piece.get().type.possibleMoves(position, board));
         }
         return moves;
     }
 
     private Position getKingPosition(List<Position> piecePositions) {
         for (var position : piecePositions) {
-            var piece = board.squares[position.row][position.column];
-            if (piece != null && piece.type == Piece.Type.KING) {
+            var piece = board.get(position);
+            if (piece.isPresent() && piece.get().type == Piece.Type.KING) {
                 return position;
             }
         }
