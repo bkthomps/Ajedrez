@@ -34,6 +34,34 @@ class FenSmokeTest {
     }
 
     @Test
+    void pawnPromotionWhite() {
+        assertEquals(9, moveCount("4k3/1P6/8/8/8/8/8/4K3 w - - 0 1"));
+        assertEquals(13, moveCount("2n1k3/1P6/8/8/8/8/8/4K3 w - - 0 1"));
+        assertEquals(13, moveCount("n3k3/1P6/8/8/8/8/8/4K3 w - - 0 1"));
+        assertEquals(17, moveCount("n1n1k3/1P6/8/8/8/8/8/4K3 w - - 0 1"));
+    }
+
+    @Test
+    void pawnPromotionBlack() {
+        assertEquals(9, moveCount("4k3/8/8/8/8/8/1p6/4K3 b - - 0 1"));
+        assertEquals(13, moveCount("4k3/8/8/8/8/8/1p6/2N1K3 b - - 0 1"));
+        assertEquals(13, moveCount("4k3/8/8/8/8/8/1p6/N3K3 b - - 0 1"));
+        assertEquals(17, moveCount("4k3/8/8/8/8/8/1p6/N1N1K3 b - - 0 1"));
+    }
+
+    @Test
+    void enPassantWhite() {
+        assertEquals(6, moveCount("4k3/8/8/pP6/8/8/8/4K3 w - a6 0 1"));
+        assertEquals(7, moveCount("4k3/8/8/2PpP3/8/8/8/4K3 w - d6 0 1"));
+    }
+
+    @Test
+    void enPassantBlack() {
+        assertEquals(6, moveCount("4k3/8/8/8/6pP/8/8/4K3 b - h3 0 1"));
+        assertEquals(7, moveCount("4k3/8/8/8/4pPp1/8/8/4K3 b - f3 0 1"));
+    }
+
+    @Test
     void checkmate() {
         assertCheckmate("8/8/8/6p1/8/4k3/8/2q1K3 w - - 6 17");
         assertCheckmate("r4r2/1p2Nppk/p7/3p4/P2qn2R/8/1P4PP/5R1K b - - 0 3");
