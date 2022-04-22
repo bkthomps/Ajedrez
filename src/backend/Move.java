@@ -13,11 +13,11 @@ public abstract class Move {
         this.end = end;
     }
 
-    abstract Optional<Piece.Type> promotionPieceType();
+    public abstract Optional<Piece.Type> promotionPieceType();
 
-    abstract boolean doMove(Board board);
+    public abstract boolean doMove(Board board);
 
-    abstract void undo(Board board);
+    public abstract void undo(Board board);
 }
 
 final class Castling extends Move {
@@ -102,7 +102,8 @@ abstract class SingleMove extends Move {
         super(start, end);
     }
 
-    boolean doMove(Board board) {
+    @Override
+    public boolean doMove(Board board) {
         if (didMove) {
             throw new IllegalStateException("Move already performed");
         }
@@ -113,7 +114,8 @@ abstract class SingleMove extends Move {
         return false;
     }
 
-    void undo(Board board) {
+    @Override
+    public void undo(Board board) {
         if (!didMove) {
             throw new IllegalStateException("Move not yet performed");
         }

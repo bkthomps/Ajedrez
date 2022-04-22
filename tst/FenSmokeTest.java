@@ -1,6 +1,9 @@
 import backend.Color;
 import backend.Game;
+import backend.Move;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -9,6 +12,29 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class FenSmokeTest {
     static int moveCount(String fen) {
         return new Game(fen).generateMoves().moves().size();
+    }
+
+    static void assertPromotionPieces(int count, List<Move> moves) {
+        int knightCount = 0;
+        int bishopCount = 0;
+        int rookCount = 0;
+        int queenCount = 0;
+        for (var move : moves) {
+            var pieceType = move.promotionPieceType();
+            if (pieceType.isEmpty()) {
+                continue;
+            }
+            switch (pieceType.get()) {
+                case KNIGHT -> knightCount++;
+                case BISHOP -> bishopCount++;
+                case ROOK -> rookCount++;
+                case QUEEN -> queenCount++;
+            }
+        }
+        assertEquals(count, knightCount);
+        assertEquals(count, bishopCount);
+        assertEquals(count, rookCount);
+        assertEquals(count, queenCount);
     }
 
     static void assertCheckmate(String fen) {
@@ -35,18 +61,34 @@ class FenSmokeTest {
 
     @Test
     void pawnPromotionWhite() {
-        assertEquals(9, moveCount("4k3/1P6/8/8/8/8/8/4K3 w - - 0 1"));
-        assertEquals(13, moveCount("2n1k3/1P6/8/8/8/8/8/4K3 w - - 0 1"));
-        assertEquals(13, moveCount("n3k3/1P6/8/8/8/8/8/4K3 w - - 0 1"));
-        assertEquals(17, moveCount("n1n1k3/1P6/8/8/8/8/8/4K3 w - - 0 1"));
+        var moves = new Game("4k3/1P6/8/8/8/8/8/4K3 w - - 0 1").generateMoves().moves();
+        assertEquals(9, moves.size());
+        assertPromotionPieces(1, moves);
+        moves = new Game("2n1k3/1P6/8/8/8/8/8/4K3 w - - 0 1").generateMoves().moves();
+        assertEquals(13, moves.size());
+        assertPromotionPieces(2, moves);
+        moves = new Game("n3k3/1P6/8/8/8/8/8/4K3 w - - 0 1").generateMoves().moves();
+        assertEquals(13, moves.size());
+        assertPromotionPieces(2, moves);
+        moves = new Game("n1n1k3/1P6/8/8/8/8/8/4K3 w - - 0 1").generateMoves().moves();
+        assertEquals(17, moves.size());
+        assertPromotionPieces(3, moves);
     }
 
     @Test
     void pawnPromotionBlack() {
-        assertEquals(9, moveCount("4k3/8/8/8/8/8/1p6/4K3 b - - 0 1"));
-        assertEquals(13, moveCount("4k3/8/8/8/8/8/1p6/2N1K3 b - - 0 1"));
-        assertEquals(13, moveCount("4k3/8/8/8/8/8/1p6/N3K3 b - - 0 1"));
-        assertEquals(17, moveCount("4k3/8/8/8/8/8/1p6/N1N1K3 b - - 0 1"));
+        var moves = new Game("4k3/8/8/8/8/8/1p6/4K3 b - - 0 1").generateMoves().moves();
+        assertEquals(9, moves.size());
+        assertPromotionPieces(1, moves);
+        moves = new Game("4k3/8/8/8/8/8/1p6/2N1K3 b - - 0 1").generateMoves().moves();
+        assertEquals(13, moves.size());
+        assertPromotionPieces(2, moves);
+        moves = new Game("4k3/8/8/8/8/8/1p6/N3K3 b - - 0 1").generateMoves().moves();
+        assertEquals(13, moves.size());
+        assertPromotionPieces(2, moves);
+        moves = new Game("4k3/8/8/8/8/8/1p6/N1N1K3 b - - 0 1").generateMoves().moves();
+        assertEquals(17, moves.size());
+        assertPromotionPieces(3, moves);
     }
 
     @Test
