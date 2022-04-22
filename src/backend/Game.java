@@ -19,6 +19,10 @@ public final class Game {
         board = new Board(fen);
     }
 
+    public String getBoard() {
+        return board.getBoard();
+    }
+
     public State generateMoves() {
         var user = board.activePlayer;
         board.activePlayer = user.previous();
@@ -73,7 +77,7 @@ public final class Game {
             boolean hasNextMove = true;
             boolean isLegal = true;
             while (hasNextMove) {
-                hasNextMove = move.doMove();
+                hasNextMove = move.partial();
                 isLegal &= !isKingChecked(user);
             }
             move.undo();

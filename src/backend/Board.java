@@ -24,6 +24,28 @@ final class Board {
         // TODO: elements[5] black ply count for 50 move rule
     }
 
+    String getBoard() {
+        var sb = new StringBuilder();
+        for (int i = 0; i < ROW_COUNT; i++) {
+            for (int j = 0; j < COLUMN_COUNT; j++) {
+                if (squares[i][j] == null) {
+                    sb.append('_');
+                    continue;
+                }
+                switch (squares[i][j].type) {
+                    case PAWN -> sb.append(squares[i][j].color == Color.WHITE ? 'P' : 'p');
+                    case KNIGHT -> sb.append(squares[i][j].color == Color.WHITE ? 'N' : 'n');
+                    case BISHOP -> sb.append(squares[i][j].color == Color.WHITE ? 'B' : 'b');
+                    case ROOK -> sb.append(squares[i][j].color == Color.WHITE ? 'R' : 'r');
+                    case QUEEN -> sb.append(squares[i][j].color == Color.WHITE ? 'Q' : 'q');
+                    case KING -> sb.append(squares[i][j].color == Color.WHITE ? 'K' : 'k');
+                }
+            }
+            sb.append('\n');
+        }
+        return sb.toString();
+    }
+
     private void setBoard(String positions) {
         var rows = positions.split("/");
         if (rows.length != ROW_COUNT) {

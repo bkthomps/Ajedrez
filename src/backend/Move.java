@@ -17,9 +17,15 @@ public abstract class Move {
 
     public abstract Optional<Piece.Type> promotionPieceType();
 
-    public abstract boolean doMove();
+    public void perform() {
+        while (partial()) {
+            // No loop body
+        }
+    }
 
     public abstract void undo();
+
+    abstract boolean partial();
 }
 
 final class Castling extends Move {
@@ -49,7 +55,7 @@ final class Castling extends Move {
     }
 
     @Override
-    public boolean doMove() {
+    boolean partial() {
         if (state == State.NOT_STARTED) {
             board.activePlayer = board.activePlayer.next();
             oldEnPassantTarget = board.enPassantTarget;
@@ -105,7 +111,7 @@ abstract class SingleMove extends Move {
     }
 
     @Override
-    public boolean doMove() {
+    boolean partial() {
         if (didMove) {
             throw new IllegalStateException("Move already performed");
         }
@@ -143,8 +149,8 @@ final class PawnPromotion extends SingleMove {
     }
 
     @Override
-    public boolean doMove() {
-        super.doMove();
+    boolean partial() {
+        super.partial();
         captured = board.squares[end.row][end.column];
         board.squares[end.row][end.column] = promotion;
         original = board.squares[start.row][start.column];
@@ -175,8 +181,8 @@ final class EnPassant extends SingleMove {
     }
 
     @Override
-    public boolean doMove() {
-        super.doMove();
+    boolean partial() {
+        super.partial();
         board.squares[end.row][end.column] = board.squares[start.row][start.column];
         board.squares[start.row][start.column] = null;
         captured = board.squares[pawnCapture.row][pawnCapture.column];
@@ -206,8 +212,8 @@ class RegularMove extends SingleMove {
     }
 
     @Override
-    public boolean doMove() {
-        super.doMove();
+    boolean partial() {
+        super.partial();
         captured = board.squares[end.row][end.column];
         board.squares[end.row][end.column] = board.squares[start.row][start.column];
         board.squares[start.row][start.column] = null;
@@ -231,8 +237,8 @@ final class PawnJump extends RegularMove {
     }
 
     @Override
-    public boolean doMove() {
-        super.doMove();
+    boolean partial() {
+        super.partial();
         board.enPassantTarget = jumpingOver;
         return false;
     }
@@ -251,9 +257,9 @@ final class ShortRookMove extends RegularMove {
     }
 
     @Override
-    public boolean doMove() {
+    boolean partial() {
         var activePlayer = board.activePlayer;
-        super.doMove();
+        super.partial();
         oldCanCastleShort = new HashSet<>(board.canCastleShort);
         board.canCastleShort.remove(activePlayer);
         return false;
@@ -274,9 +280,9 @@ final class LongRookMove extends RegularMove {
     }
 
     @Override
-    public boolean doMove() {
+    boolean partial() {
         var activePlayer = board.activePlayer;
-        super.doMove();
+        super.partial();
         oldCanCastleLong = new HashSet<>(board.canCastleLong);
         board.canCastleLong.remove(activePlayer);
         return false;
@@ -298,12 +304,12 @@ final class KingMove extends RegularMove {
     }
 
     @Override
-    public boolean doMove() {
+    boolean partial() {
         oldCanCastleShort = new HashSet<>(board.canCastleShort);
         oldCanCastleLong = new HashSet<>(board.canCastleLong);
         board.canCastleShort.remove(board.activePlayer);
         board.canCastleLong.remove(board.activePlayer);
-        super.doMove();
+        super.partial();
         return false;
     }
 

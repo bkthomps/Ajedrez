@@ -1,27 +1,26 @@
 import backend.Color;
 import backend.Game;
-import backend.Move;
+import backend.State;
 import org.junit.jupiter.api.Test;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class RecursiveDepthTest {
     private static int getMovesCount(Game game, int depth) {
-        var moves = game.generateMoves().moves();
-        return getMovesCount(game, moves, depth - 1);
+        return getMovesCount(game, game.generateMoves(), depth - 1);
     }
 
-    private static int getMovesCount(Game game, List<Move> moves, int depth) {
-        int count = moves.size();
-        if (depth == 0) {
-            return count;
+    private static int getMovesCount(Game game, State state, int depth) {
+        if (state.isTerminal()) {
+            return 0;
         }
-        for (var move : moves) {
-            move.doMove();
-            count += getMovesCount(game, game.generateMoves().moves(), depth - 1);
+        if (depth == 0) {
+            return state.moves().size();
+        }
+        int count = 0;
+        for (var move : state.moves()) {
+            move.perform();
+            count += getMovesCount(game, game.generateMoves(), depth - 1);
             move.undo();
         }
         return count;
