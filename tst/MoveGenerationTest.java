@@ -18,6 +18,13 @@ class MoveGenerationTest {
         assertTrue(state.isCheckmate());
     }
 
+    static void assertStalemate(String fen) {
+        var state = new Game(fen).generateMoves();
+        assertTrue(state.isTerminal());
+        assertTrue(state.isTie());
+        assertTrue(state.terminalMessage().contains("stalemate"));
+    }
+
     @Test
     void startMoves() {
         var game = new Game(Color.WHITE);
@@ -39,6 +46,20 @@ class MoveGenerationTest {
         assertCheckmate("5rk1/6RR/8/8/8/8/8/6K1 b - - 5 3");
         assertCheckmate("2kr2r1/3n1p2/B1p4p/8/1P1Pn1b1/5N2/P4PPB/5RK1 b - - 0 3");
         assertCheckmate("5brk/5N1p/8/2n1P3/8/8/3B4/2K3R1 b - - 0 2");
+    }
+
+    @Test
+    void stalemate() {
+        assertStalemate("3k4/8/2QP4/P4p2/5P2/8/7P/6K1 b - - 0 3");
+        assertStalemate("4b2k/5pp1/6p1/6K1/2r5/8/8/8 w - - 0 6");
+        assertStalemate("8/4k3/8/1p2p2p/1P2Pn1P/5Pq1/4r3/7K w - - 0 5");
+        assertStalemate("8/8/8/5k2/5p2/5K2/1r6/8 w - - 0 3");
+        assertStalemate("8/3b4/p1p5/kp6/4p3/8/5q2/7K w - - 0 4");
+        assertStalemate("3k4/3p4/2pK1p2/2P5/8/8/8/8 w - - 0 5");
+        assertStalemate("6R1/8/8/5P2/7p/7k/8/Q6K b - - 0 4");
+        assertStalemate("k7/4q1b1/1p6/p7/5p2/2n2P2/7r/2K5 w - - 0 5");
+        assertStalemate("8/6k1/p2pn2p/6p1/4qpP1/7K/7P/8 w - - 0 3");
+        assertStalemate("8/1r6/8/8/6p1/6k1/6p1/6K1 w - - 0 5");
     }
 
     @Test
