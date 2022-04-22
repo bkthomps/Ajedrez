@@ -11,7 +11,8 @@ public final class Game {
     }
 
     public Game(Color playerColor) {
-        this(String.format("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR %s KQkq - 0 1", playerColor.code()));
+        this("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        // TODO: if the color is not white, call bots until it's the user's turn
     }
 
     public Game(String fen) {
@@ -20,10 +21,12 @@ public final class Game {
 
     public State generateMoves() {
         var user = board.activePlayer;
+        board.activePlayer = user.previous();
+        var isKingChecked = isKingChecked(user);
+        board.activePlayer = user;
         var alliedPositions = getPiecePositions(user);
         var possibleMoves = possibleMoves(alliedPositions);
         var legalMoves = legalMoves(possibleMoves, user);
-        var isKingChecked = isKingChecked(user);
         if (legalMoves.isEmpty()) {
             var terminalState = isKingChecked ? State.Type.CHECKMATE : State.Type.STALEMATE;
             return new State(terminalState, legalMoves);

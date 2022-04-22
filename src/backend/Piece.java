@@ -196,17 +196,21 @@ public final class Piece {
             var moves = new ArrayList<Move>();
             var position = new Position(start.row + row, start.column + column);
             while (board.isFree(position)) {
-                switch (move) {
-                    case SHORT_ROOK_MOVE -> moves.add(new ShortRookMove(start, position));
-                    case LONG_ROOK_MOVE -> moves.add(new LongRookMove(start, position));
-                    case REGULAR_MOVE -> moves.add(new RegularMove(start, position));
-                }
+                moves.add(getMove(move, start, position));
                 position = new Position(position.row + row, position.column + column);
             }
             if (board.isEnemy(position)) {
-                moves.add(new RegularMove(start, position));
+                moves.add(getMove(move, start, position));
             }
             return moves;
+        }
+
+        private static Move getMove(MoveType move, Position start, Position end) {
+            return switch (move) {
+                case SHORT_ROOK_MOVE -> new ShortRookMove(start, end);
+                case LONG_ROOK_MOVE -> new LongRookMove(start, end);
+                case REGULAR_MOVE -> new RegularMove(start, end);
+            };
         }
     }
 

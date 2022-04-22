@@ -1,5 +1,6 @@
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -11,6 +12,12 @@ class MoveGenerationTest {
         return new Game(fen).generateMoves().moves().size();
     }
 
+    static void assertCheckmate(String fen) {
+        var state = new Game(fen).generateMoves();
+        assertTrue(state.isTerminal());
+        assertTrue(state.isCheckmate());
+    }
+
     @Test
     void startMoves() {
         var game = new Game(Color.WHITE);
@@ -18,6 +25,20 @@ class MoveGenerationTest {
         assertFalse(state.isTerminal());
         var moves = state.moves();
         assertEquals(20, moves.size());
+    }
+
+    @Test
+    void checkmate() {
+        assertCheckmate("8/8/8/6p1/8/4k3/8/2q1K3 w - - 6 17");
+        assertCheckmate("r4r2/1p2Nppk/p7/3p4/P2qn2R/8/1P4PP/5R1K b - - 0 3");
+        assertCheckmate("6kR/6P1/5K2/8/8/8/8/8 b - - 1 1");
+        assertCheckmate("7k/pp2N2p/8/4p3/P7/1P1PPn2/2P4r/R6K w - - 0 4");
+        assertCheckmate("2R5/pp3ppk/7p/3p4/8/P7/2P2PPP/1q4K1 w - - 0 3");
+        assertCheckmate("4k3/8/2B2Q2/8/8/8/8/6K1 b - - 1 1");
+        assertCheckmate("5rk1/7B/8/6N1/8/8/1B6/6K1 b - - 1 1");
+        assertCheckmate("5rk1/6RR/8/8/8/8/8/6K1 b - - 5 3");
+        assertCheckmate("2kr2r1/3n1p2/B1p4p/8/1P1Pn1b1/5N2/P4PPB/5RK1 b - - 0 3");
+        assertCheckmate("5brk/5N1p/8/2n1P3/8/8/3B4/2K3R1 b - - 0 2");
     }
 
     @Test
