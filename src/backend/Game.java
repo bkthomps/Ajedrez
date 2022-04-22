@@ -19,6 +19,10 @@ public final class Game {
         board = new Board(fen);
     }
 
+    public Board board() {
+        return board;
+    }
+
     public State generateMoves() {
         var user = board.activePlayer;
         board.activePlayer = user.previous();

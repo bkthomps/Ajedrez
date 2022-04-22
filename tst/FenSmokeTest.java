@@ -1,4 +1,3 @@
-import backend.Color;
 import backend.Game;
 import backend.Move;
 import org.junit.jupiter.api.Test;
@@ -6,15 +5,14 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FenSmokeTest {
-    static int moveCount(String fen) {
+    private static int moveCount(String fen) {
         return new Game(fen).generateMoves().moves().size();
     }
 
-    static void assertPromotionPieces(int count, List<Move> moves) {
+    private static void assertPromotionPieces(int count, List<Move> moves) {
         int knightCount = 0;
         int bishopCount = 0;
         int rookCount = 0;
@@ -37,26 +35,17 @@ class FenSmokeTest {
         assertEquals(count, queenCount);
     }
 
-    static void assertCheckmate(String fen) {
+    private static void assertCheckmate(String fen) {
         var state = new Game(fen).generateMoves();
         assertTrue(state.isTerminal());
         assertTrue(state.isCheckmate());
     }
 
-    static void assertStalemate(String fen) {
+    private static void assertStalemate(String fen) {
         var state = new Game(fen).generateMoves();
         assertTrue(state.isTerminal());
         assertTrue(state.isTie());
         assertTrue(state.terminalMessage().contains("stalemate"));
-    }
-
-    @Test
-    void startMoves() {
-        var game = new Game(Color.WHITE);
-        var state = game.generateMoves();
-        assertFalse(state.isTerminal());
-        var moves = state.moves();
-        assertEquals(20, moves.size());
     }
 
     @Test
