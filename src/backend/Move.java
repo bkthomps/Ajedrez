@@ -127,6 +127,7 @@ abstract class SingleMove extends Move {
 
 final class PawnPromotion extends SingleMove {
     private Piece captured;
+    private Piece original;
     private final Piece promotion;
 
     PawnPromotion(Position start, Position end, Piece promotion) {
@@ -144,6 +145,7 @@ final class PawnPromotion extends SingleMove {
         super.doMove(board);
         captured = board.squares[end.row][end.column];
         board.squares[end.row][end.column] = promotion;
+        original = board.squares[start.row][start.column];
         board.squares[start.row][start.column] = null;
         return false;
     }
@@ -151,7 +153,7 @@ final class PawnPromotion extends SingleMove {
     @Override
     public void undo(Board board) {
         super.undo(board);
-        board.squares[start.row][start.column] = board.squares[end.row][end.column];
+        board.squares[start.row][start.column] = original;
         board.squares[end.row][end.column] = captured;
     }
 }
@@ -231,6 +233,11 @@ final class PawnJump extends RegularMove {
         super.doMove(board);
         board.enPassantTarget = jumpingOver;
         return false;
+    }
+
+    @Override
+    public void undo(Board board) {
+        super.undo(board);
     }
 }
 

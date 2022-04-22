@@ -16,7 +16,6 @@ public class RecursiveDepthTest {
                 move.doMove(game.board());
                 var moves = game.generateMoves().moves();
                 totalMoves.addAll(moves);
-                System.out.println(totalMoves.size());
             }
         }
         return totalMoves.size();
@@ -80,7 +79,7 @@ public class RecursiveDepthTest {
 
     @Test
     void midGameDepth_5() {
-        // var game = new Game(testPosition);
-        // assertEquals(89_941_194, getMovesCount(game, 5));
+        var game = new Game(testPosition);
+        assertEquals(89_941_194, getMovesCount(game, 5));
     }
 }
