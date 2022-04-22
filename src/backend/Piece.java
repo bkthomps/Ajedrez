@@ -165,6 +165,17 @@ public final class Piece {
                         moves.add(new KingMove(board, start, end));
                     }
                 }
+
+                // TODO: this should go in the move code
+                var shortRook = board.squares[board.activePlayer.piecesRow()][Board.COLUMN_COUNT - 1];
+                if (shortRook == null || shortRook.color != board.activePlayer || shortRook.type != Piece.Type.ROOK) {
+                    board.canCastleShort.remove(board.activePlayer);
+                }
+                var longRook = board.squares[board.activePlayer.piecesRow()][0];
+                if (longRook == null || longRook.color != board.activePlayer || longRook.type != Piece.Type.ROOK) {
+                    board.canCastleLong.remove(board.activePlayer);
+                }
+
                 if (board.canCastleShort.contains(board.activePlayer)) {
                     var rookStart = new Position(start.row, Board.COLUMN_COUNT - 1);
                     if (hasClearPathExclusive(board, start.row, start.column, rookStart.column)) {
@@ -173,7 +184,7 @@ public final class Piece {
                         moves.add(new Castling(board, start, kingEnd, rookStart, rookEnd));
                     }
                 }
-                if (board.canCastleShort.contains(board.activePlayer)) {
+                if (board.canCastleLong.contains(board.activePlayer)) {
                     var rookStart = new Position(start.row, 0);
                     if (hasClearPathExclusive(board, start.row, rookStart.column, start.column)) {
                         var kingEnd = new Position(start.row, start.column - CASTLING_KING_JUMP);
