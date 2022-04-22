@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 public final class Piece {
+    private static final int CASTLING_KING_JUMP = 2;
+
     public enum Type {
         PAWN {
             @Override
@@ -158,10 +160,35 @@ public final class Piece {
                 var moves = new ArrayList<Move>();
                 for (var end : positions) {
                     if (board.isFree(end) || board.isEnemy(end)) {
-                        moves.add(new RegularMove(start, end));
+                        moves.add(new KingMove(start, end));
+                    }
+                }
+                if (board.canCastleShort.contains(board.activePlayer)) {
+                    var rookStart = new Position(start.row, Board.COLUMN_COUNT - 1);
+                    if (hasClearPathExclusive(board, start.row, start.column, rookStart.column)) {
+                        var kingEnd = new Position(start.row, start.column + CASTLING_KING_JUMP);
+                        var rookEnd = new Position(start.row, kingEnd.column - 1);
+                        moves.add(new Castling(start, kingEnd, rookStart, rookEnd));
+                    }
+                }
+                if (board.canCastleShort.contains(board.activePlayer)) {
+                    var rookStart = new Position(start.row, 0);
+                    if (hasClearPathExclusive(board, start.row, rookStart.column, start.column)) {
+                        var kingEnd = new Position(start.row, start.column - CASTLING_KING_JUMP);
+                        var rookEnd = new Position(start.row, kingEnd.column + 1);
+                        moves.add(new Castling(start, kingEnd, rookStart, rookEnd));
                     }
                 }
                 return moves;
+            }
+
+            private boolean hasClearPathExclusive(Board board, int row, int start, int end) {
+                for (int i = start + 1; i < end; i++) {
+                    if (board.squares[row][i] != null) {
+                        return false;
+                    }
+                }
+                return true;
             }
         };
 

@@ -1,13 +1,12 @@
+import backend.Color;
+import backend.Game;
+import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.jupiter.api.Test;
-
-import backend.Color;
-import backend.Game;
-
-class MoveGenerationTest {
+class FenSmokeTest {
     static int moveCount(String fen) {
         return new Game(fen).generateMoves().moves().size();
     }

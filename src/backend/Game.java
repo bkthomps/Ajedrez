@@ -70,8 +70,12 @@ public final class Game {
     private List<Move> legalMoves(List<Move> possibleMoves, Color user) {
         var moves = new ArrayList<Move>();
         for (var move : possibleMoves) {
-            move.doMove(board);
-            var isLegal = !isKingChecked(user);
+            boolean hasNextMove = true;
+            boolean isLegal = true;
+            while (hasNextMove) {
+                hasNextMove = move.doMove(board);
+                isLegal &= !isKingChecked(user);
+            }
             move.undo(board);
             if (isLegal) {
                 moves.add(move);
