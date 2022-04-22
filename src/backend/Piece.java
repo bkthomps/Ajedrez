@@ -48,7 +48,7 @@ public final class Piece {
                 var moves = new ArrayList<Move>();
                 var promotablePieces = new Type[]{KNIGHT, BISHOP, ROOK, QUEEN};
                 for (var promotable : promotablePieces) {
-                    moves.add(new PawnPromotion(start, end, new Piece(promotable, board.activePlayer)));
+                    moves.add(new PawnPromotion(board, start, end, new Piece(promotable, board.activePlayer)));
                 }
                 return moves;
             }
@@ -57,7 +57,7 @@ public final class Piece {
                 var skip = new Position(start.row + piece.color.pawnMove(), start.column);
                 var end = new Position(skip.row + piece.color.pawnMove(), skip.column);
                 if (board.get(skip).isEmpty() && board.get(end).isEmpty()) {
-                    return Optional.of(new PawnJump(start, end, skip));
+                    return Optional.of(new PawnJump(board, start, end, skip));
                 }
                 return Optional.empty();
             }
@@ -69,7 +69,7 @@ public final class Piece {
                 var captureLeft = new Position(nextRow, position.column - 1);
                 var captureRight = new Position(nextRow, position.column + 1);
                 if (board.get(advance).isEmpty()) {
-                    moves.add(new RegularMove(position, advance));
+                    moves.add(new RegularMove(board, position, advance));
                 }
                 var captures = new Position[]{captureLeft, captureRight};
                 for (var capture : captures) {
@@ -77,13 +77,13 @@ public final class Piece {
                         if (capture.equals(board.enPassantTarget)) {
                             var pawnMove = board.activePlayer.pawnMove();
                             var capturePosition = new Position(capture.row + pawnMove, capture.column);
-                            moves.add(new EnPassant(position, board.enPassantTarget, capturePosition));
+                            moves.add(new EnPassant(board, position, board.enPassantTarget, capturePosition));
                         }
                         continue;
                     }
                     var capturePiece = board.get(capture).get();
                     if (capturePiece.color != board.activePlayer) {
-                        moves.add(new RegularMove(position, capture));
+                        moves.add(new RegularMove(board, position, capture));
                     }
                 }
                 return moves;
@@ -106,7 +106,7 @@ public final class Piece {
                 var moves = new ArrayList<Move>();
                 for (var end : positions) {
                     if (board.isFree(end) || board.isEnemy(end)) {
-                        moves.add(new RegularMove(start, end));
+                        moves.add(new RegularMove(board, start, end));
                     }
                 }
                 return moves;
@@ -162,7 +162,7 @@ public final class Piece {
                 var moves = new ArrayList<Move>();
                 for (var end : positions) {
                     if (board.isFree(end) || board.isEnemy(end)) {
-                        moves.add(new KingMove(start, end));
+                        moves.add(new KingMove(board, start, end));
                     }
                 }
                 if (board.canCastleShort.contains(board.activePlayer)) {
@@ -170,7 +170,7 @@ public final class Piece {
                     if (hasClearPathExclusive(board, start.row, start.column, rookStart.column)) {
                         var kingEnd = new Position(start.row, start.column + CASTLING_KING_JUMP);
                         var rookEnd = new Position(start.row, kingEnd.column - 1);
-                        moves.add(new Castling(start, kingEnd, rookStart, rookEnd));
+                        moves.add(new Castling(board, start, kingEnd, rookStart, rookEnd));
                     }
                 }
                 if (board.canCastleShort.contains(board.activePlayer)) {
@@ -178,7 +178,7 @@ public final class Piece {
                     if (hasClearPathExclusive(board, start.row, rookStart.column, start.column)) {
                         var kingEnd = new Position(start.row, start.column - CASTLING_KING_JUMP);
                         var rookEnd = new Position(start.row, kingEnd.column + 1);
-                        moves.add(new Castling(start, kingEnd, rookStart, rookEnd));
+                        moves.add(new Castling(board, start, kingEnd, rookStart, rookEnd));
                     }
                 }
                 return moves;
@@ -225,20 +225,20 @@ public final class Piece {
             var moves = new ArrayList<Move>();
             var position = new Position(start.row + row, start.column + column);
             while (board.isFree(position)) {
-                moves.add(getMove(move, start, position));
+                moves.add(getMove(move, start, position, board));
                 position = new Position(position.row + row, position.column + column);
             }
             if (board.isEnemy(position)) {
-                moves.add(getMove(move, start, position));
+                moves.add(getMove(move, start, position, board));
             }
             return moves;
         }
 
-        private static Move getMove(MoveType move, Position start, Position end) {
+        private static Move getMove(MoveType move, Position start, Position end, Board board) {
             return switch (move) {
-                case SHORT_ROOK_MOVE -> new ShortRookMove(start, end);
-                case LONG_ROOK_MOVE -> new LongRookMove(start, end);
-                case REGULAR_MOVE -> new RegularMove(start, end);
+                case SHORT_ROOK_MOVE -> new ShortRookMove(board, start, end);
+                case LONG_ROOK_MOVE -> new LongRookMove(board, start, end);
+                case REGULAR_MOVE -> new RegularMove(board, start, end);
             };
         }
     }

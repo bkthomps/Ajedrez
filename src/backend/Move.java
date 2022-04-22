@@ -5,19 +5,21 @@ import java.util.Optional;
 import java.util.Set;
 
 public abstract class Move {
+    final Board board;
     public final Position start;
     public final Position end;
 
-    Move(Position start, Position end) {
+    Move(Board board, Position start, Position end) {
+        this.board = board;
         this.start = start;
         this.end = end;
     }
 
     public abstract Optional<Piece.Type> promotionPieceType();
 
-    public abstract boolean doMove(Board board);
+    public abstract boolean doMove();
 
-    public abstract void undo(Board board);
+    public abstract void undo();
 }
 
 final class Castling extends Move {
@@ -35,8 +37,8 @@ final class Castling extends Move {
     private State state = State.NOT_STARTED;
     private int currentKingColumn;
 
-    Castling(Position kingStart, Position kingEnd, Position rookStart, Position rookEnd) {
-        super(kingStart, kingEnd);
+    Castling(Board board, Position kingStart, Position kingEnd, Position rookStart, Position rookEnd) {
+        super(board, kingStart, kingEnd);
         this.rookStart = rookStart;
         this.rookEnd = rookEnd;
     }
@@ -47,7 +49,7 @@ final class Castling extends Move {
     }
 
     @Override
-    public boolean doMove(Board board) {
+    public boolean doMove() {
         if (state == State.NOT_STARTED) {
             board.activePlayer = board.activePlayer.next();
             oldEnPassantTarget = board.enPassantTarget;
@@ -78,7 +80,7 @@ final class Castling extends Move {
     }
 
     @Override
-    public void undo(Board board) {
+    public void undo() {
         if (state != State.DONE) {
             throw new IllegalStateException("Move not fully performed");
         }
@@ -98,12 +100,12 @@ abstract class SingleMove extends Move {
     private Position oldEnPassantTarget;
     private boolean didMove;
 
-    SingleMove(Position start, Position end) {
-        super(start, end);
+    SingleMove(Board board, Position start, Position end) {
+        super(board, start, end);
     }
 
     @Override
-    public boolean doMove(Board board) {
+    public boolean doMove() {
         if (didMove) {
             throw new IllegalStateException("Move already performed");
         }
@@ -115,7 +117,7 @@ abstract class SingleMove extends Move {
     }
 
     @Override
-    public void undo(Board board) {
+    public void undo() {
         if (!didMove) {
             throw new IllegalStateException("Move not yet performed");
         }
@@ -130,8 +132,8 @@ final class PawnPromotion extends SingleMove {
     private Piece original;
     private final Piece promotion;
 
-    PawnPromotion(Position start, Position end, Piece promotion) {
-        super(start, end);
+    PawnPromotion(Board board, Position start, Position end, Piece promotion) {
+        super(board, start, end);
         this.promotion = promotion;
     }
 
@@ -141,8 +143,8 @@ final class PawnPromotion extends SingleMove {
     }
 
     @Override
-    public boolean doMove(Board board) {
-        super.doMove(board);
+    public boolean doMove() {
+        super.doMove();
         captured = board.squares[end.row][end.column];
         board.squares[end.row][end.column] = promotion;
         original = board.squares[start.row][start.column];
@@ -151,8 +153,8 @@ final class PawnPromotion extends SingleMove {
     }
 
     @Override
-    public void undo(Board board) {
-        super.undo(board);
+    public void undo() {
+        super.undo();
         board.squares[start.row][start.column] = original;
         board.squares[end.row][end.column] = captured;
     }
@@ -162,8 +164,8 @@ final class EnPassant extends SingleMove {
     private Piece captured;
     private final Position pawnCapture;
 
-    EnPassant(Position start, Position end, Position pawnCapture) {
-        super(start, end);
+    EnPassant(Board board, Position start, Position end, Position pawnCapture) {
+        super(board, start, end);
         this.pawnCapture = pawnCapture;
     }
 
@@ -173,8 +175,8 @@ final class EnPassant extends SingleMove {
     }
 
     @Override
-    public boolean doMove(Board board) {
-        super.doMove(board);
+    public boolean doMove() {
+        super.doMove();
         board.squares[end.row][end.column] = board.squares[start.row][start.column];
         board.squares[start.row][start.column] = null;
         captured = board.squares[pawnCapture.row][pawnCapture.column];
@@ -183,8 +185,8 @@ final class EnPassant extends SingleMove {
     }
 
     @Override
-    public void undo(Board board) {
-        super.undo(board);
+    public void undo() {
+        super.undo();
         board.squares[start.row][start.column] = board.squares[end.row][end.column];
         board.squares[end.row][end.column] = null;
         board.squares[pawnCapture.row][pawnCapture.column] = captured;
@@ -194,8 +196,8 @@ final class EnPassant extends SingleMove {
 class RegularMove extends SingleMove {
     private Piece captured;
 
-    RegularMove(Position start, Position end) {
-        super(start, end);
+    RegularMove(Board board, Position start, Position end) {
+        super(board, start, end);
     }
 
     @Override
@@ -204,8 +206,8 @@ class RegularMove extends SingleMove {
     }
 
     @Override
-    public boolean doMove(Board board) {
-        super.doMove(board);
+    public boolean doMove() {
+        super.doMove();
         captured = board.squares[end.row][end.column];
         board.squares[end.row][end.column] = board.squares[start.row][start.column];
         board.squares[start.row][start.column] = null;
@@ -213,8 +215,8 @@ class RegularMove extends SingleMove {
     }
 
     @Override
-    public void undo(Board board) {
-        super.undo(board);
+    public void undo() {
+        super.undo();
         board.squares[start.row][start.column] = board.squares[end.row][end.column];
         board.squares[end.row][end.column] = captured;
     }
@@ -223,43 +225,43 @@ class RegularMove extends SingleMove {
 final class PawnJump extends RegularMove {
     private final Position jumpingOver;
 
-    PawnJump(Position start, Position end, Position jumpingOver) {
-        super(start, end);
+    PawnJump(Board board, Position start, Position end, Position jumpingOver) {
+        super(board, start, end);
         this.jumpingOver = jumpingOver;
     }
 
     @Override
-    public boolean doMove(Board board) {
-        super.doMove(board);
+    public boolean doMove() {
+        super.doMove();
         board.enPassantTarget = jumpingOver;
         return false;
     }
 
     @Override
-    public void undo(Board board) {
-        super.undo(board);
+    public void undo() {
+        super.undo();
     }
 }
 
 final class ShortRookMove extends RegularMove {
     private Set<Color> oldCanCastleShort;
 
-    ShortRookMove(Position start, Position end) {
-        super(start, end);
+    ShortRookMove(Board board, Position start, Position end) {
+        super(board, start, end);
     }
 
     @Override
-    public boolean doMove(Board board) {
+    public boolean doMove() {
         var activePlayer = board.activePlayer;
-        super.doMove(board);
+        super.doMove();
         oldCanCastleShort = new HashSet<>(board.canCastleShort);
         board.canCastleShort.remove(activePlayer);
         return false;
     }
 
     @Override
-    public void undo(Board board) {
-        super.undo(board);
+    public void undo() {
+        super.undo();
         board.canCastleShort = oldCanCastleShort;
     }
 }
@@ -267,22 +269,22 @@ final class ShortRookMove extends RegularMove {
 final class LongRookMove extends RegularMove {
     private Set<Color> oldCanCastleLong;
 
-    LongRookMove(Position start, Position end) {
-        super(start, end);
+    LongRookMove(Board board, Position start, Position end) {
+        super(board, start, end);
     }
 
     @Override
-    public boolean doMove(Board board) {
+    public boolean doMove() {
         var activePlayer = board.activePlayer;
-        super.doMove(board);
+        super.doMove();
         oldCanCastleLong = new HashSet<>(board.canCastleLong);
         board.canCastleLong.remove(activePlayer);
         return false;
     }
 
     @Override
-    public void undo(Board board) {
-        super.undo(board);
+    public void undo() {
+        super.undo();
         board.canCastleLong = oldCanCastleLong;
     }
 }
@@ -291,23 +293,23 @@ final class KingMove extends RegularMove {
     private Set<Color> oldCanCastleShort;
     private Set<Color> oldCanCastleLong;
 
-    KingMove(Position start, Position end) {
-        super(start, end);
+    KingMove(Board board, Position start, Position end) {
+        super(board, start, end);
     }
 
     @Override
-    public boolean doMove(Board board) {
+    public boolean doMove() {
         oldCanCastleShort = new HashSet<>(board.canCastleShort);
         oldCanCastleLong = new HashSet<>(board.canCastleLong);
         board.canCastleShort.remove(board.activePlayer);
         board.canCastleLong.remove(board.activePlayer);
-        super.doMove(board);
+        super.doMove();
         return false;
     }
 
     @Override
-    public void undo(Board board) {
-        super.undo(board);
+    public void undo() {
+        super.undo();
         board.canCastleShort = oldCanCastleShort;
         board.canCastleLong = oldCanCastleLong;
     }
