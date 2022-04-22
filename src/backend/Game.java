@@ -31,6 +31,7 @@ public final class Game {
         var alliedPositions = getPiecePositions(user);
         var possibleMoves = possibleMoves(alliedPositions);
         var legalMoves = legalMoves(possibleMoves, user);
+        updateCastlingRights(user);
         if (legalMoves.isEmpty()) {
             var terminalState = isKingChecked ? State.Type.CHECKMATE : State.Type.STALEMATE;
             return new State(terminalState, legalMoves);
@@ -102,5 +103,16 @@ public final class Game {
             }
         }
         return false;
+    }
+
+    private void updateCastlingRights(Color player) {
+        var longRook = board.squares[player.piecesRow()][0];
+        if (longRook == null || longRook.color != player || longRook.type != Piece.Type.ROOK) {
+            board.canCastleLong.remove(player);
+        }
+        var shortRook = board.squares[player.piecesRow()][Board.COLUMN_COUNT - 1];
+        if (shortRook == null || shortRook.color != player || shortRook.type != Piece.Type.ROOK) {
+            board.canCastleShort.remove(player);
+        }
     }
 }
