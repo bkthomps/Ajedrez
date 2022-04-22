@@ -75,7 +75,7 @@ public final class Piece {
                 for (var capture : captures) {
                     if (board.get(capture).isEmpty()) {
                         if (capture.equals(board.enPassantTarget)) {
-                            var pawnMove = board.activePlayer.pawnMove();
+                            var pawnMove = board.activePlayer.previous().pawnMove();
                             var capturePosition = new Position(capture.row + pawnMove, capture.column);
                             moves.add(new EnPassant(board, position, board.enPassantTarget, capturePosition));
                         }
