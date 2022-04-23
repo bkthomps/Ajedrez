@@ -1,6 +1,5 @@
 package backend;
 
-
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -163,28 +162,26 @@ final class Board {
 
     private void validateCastling() {
         if (longCastleRights.get(Color.BLACK.bitIndex())) {
-            var piece = squares[0][0];
-            if (piece == null || piece.type != Piece.Type.ROOK || piece.color != Color.BLACK) {
-                throw new IllegalArgumentException("The fen string is malformed: invalid castling rights");
-            }
+            validatePiece(squares[0][0], Piece.Type.ROOK, Color.BLACK);
+            validatePiece(squares[0][COLUMN_COUNT / 2], Piece.Type.KING, Color.BLACK);
         }
         if (shortCastleRights.get(Color.BLACK.bitIndex())) {
-            var piece = squares[0][COLUMN_COUNT - 1];
-            if (piece == null || piece.type != Piece.Type.ROOK || piece.color != Color.BLACK) {
-                throw new IllegalArgumentException("The fen string is malformed: invalid castling rights");
-            }
+            validatePiece(squares[0][COLUMN_COUNT - 1], Piece.Type.ROOK, Color.BLACK);
+            validatePiece(squares[0][COLUMN_COUNT / 2], Piece.Type.KING, Color.BLACK);
         }
         if (longCastleRights.get(Color.WHITE.bitIndex())) {
-            var piece = squares[ROW_COUNT - 1][0];
-            if (piece == null || piece.type != Piece.Type.ROOK || piece.color != Color.WHITE) {
-                throw new IllegalArgumentException("The fen string is malformed: invalid castling rights");
-            }
+            validatePiece(squares[ROW_COUNT - 1][0], Piece.Type.ROOK, Color.WHITE);
+            validatePiece(squares[ROW_COUNT - 1][COLUMN_COUNT / 2], Piece.Type.KING, Color.WHITE);
         }
         if (shortCastleRights.get(Color.WHITE.bitIndex())) {
-            var piece = squares[ROW_COUNT - 1][COLUMN_COUNT - 1];
-            if (piece == null || piece.type != Piece.Type.ROOK || piece.color != Color.WHITE) {
-                throw new IllegalArgumentException("The fen string is malformed: invalid castling rights");
-            }
+            validatePiece(squares[ROW_COUNT - 1][COLUMN_COUNT - 1], Piece.Type.ROOK, Color.WHITE);
+            validatePiece(squares[ROW_COUNT - 1][COLUMN_COUNT / 2], Piece.Type.KING, Color.WHITE);
+        }
+    }
+
+    private void validatePiece(Piece piece, Piece.Type type, Color color) {
+        if (piece == null || piece.type != type || piece.color != color) {
+            throw new IllegalArgumentException("The fen string is malformed: invalid castling rights");
         }
     }
 
