@@ -3,9 +3,13 @@ package frontend;
 import backend.Game;
 import backend.State;
 import javafx.fxml.FXML;
+import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
+
+import java.io.File;
 
 public class BoardController {
     private static final int ROW_COUNT = 8;
@@ -30,13 +34,21 @@ public class BoardController {
     }
 
     private void paintBoard(backend.Color activePlayer) {
+        var squares = game.getBoard();
         for (int i = 0; i < ROW_COUNT; i++) {
-            for (int j = 0; j < ROW_COUNT; j++) {
+            for (int j = 0; j < COLUMN_COUNT; j++) {
                 // TODO: size should come from a calculation, not hard-coded
                 int size = 600 / 8;
                 var r = new Rectangle(size, size);
                 r.setFill((i + j) % 2 == 0 ? LIGHT_BROWN : DARK_BROWN);
-                board.add(r, i, j);
+                var piece = squares[i][j];
+                if (piece != null) {
+                    var imageName = piece.color + "_" + piece.type + ".png";
+                    var image = new Image(imageName);
+                    var pattern = new ImagePattern(image);
+                    r.setFill(pattern);
+                }
+                board.add(r, j, i);
             }
         }
     }
