@@ -217,6 +217,7 @@ class RegularMove extends Move {
     @Override
     boolean partial() {
         super.partial();
+        updateCastlingRights(start);
         updateCastlingRights(end);
         captured = board.squares[end.row][end.column];
         board.squares[end.row][end.column] = board.squares[start.row][start.column];
@@ -244,44 +245,6 @@ final class PawnJump extends RegularMove {
     boolean partial() {
         super.partial();
         board.enPassantTarget = jumpingOver;
-        return false;
-    }
-
-    @Override
-    public void undo() {
-        super.undo();
-    }
-}
-
-final class ShortRookMove extends RegularMove {
-    ShortRookMove(Board board, Position start, Position end) {
-        super(board, start, end);
-    }
-
-    @Override
-    boolean partial() {
-        var activePlayer = board.activePlayer;
-        super.partial();
-        board.shortCastleRights.clear(activePlayer.bitIndex());
-        return false;
-    }
-
-    @Override
-    public void undo() {
-        super.undo();
-    }
-}
-
-final class LongRookMove extends RegularMove {
-    LongRookMove(Board board, Position start, Position end) {
-        super(board, start, end);
-    }
-
-    @Override
-    boolean partial() {
-        var activePlayer = board.activePlayer;
-        super.partial();
-        board.longCastleRights.clear(activePlayer.bitIndex());
         return false;
     }
 

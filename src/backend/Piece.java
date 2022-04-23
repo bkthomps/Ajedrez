@@ -123,16 +123,7 @@ public final class Piece {
         ROOK {
             @Override
             List<Move> possibleMoves(Position position, Board board) {
-                var piece = board.get(position).orElseThrow();
-                if (position.row == piece.color.piecesRow()) {
-                    if (position.column == Board.COLUMN_COUNT - 1) {
-                        return rookMoves(position, board, MoveType.SHORT_ROOK_MOVE);
-                    }
-                    if (position.column == 0) {
-                        return rookMoves(position, board, MoveType.LONG_ROOK_MOVE);
-                    }
-                }
-                return rookMoves(position, board, MoveType.REGULAR_MOVE);
+                return rookMoves(position, board);
             }
         },
 
@@ -141,7 +132,7 @@ public final class Piece {
             List<Move> possibleMoves(Position position, Board board) {
                 var moves = new ArrayList<Move>();
                 moves.addAll(bishopMoves(position, board));
-                moves.addAll(rookMoves(position, board, MoveType.REGULAR_MOVE));
+                moves.addAll(rookMoves(position, board));
                 return moves;
             }
         },
@@ -203,43 +194,35 @@ public final class Piece {
             REGULAR_MOVE
         }
 
-        private static List<Move> rookMoves(Position position, Board board, MoveType moveType) {
+        private static List<Move> rookMoves(Position position, Board board) {
             var moves = new ArrayList<Move>();
-            moves.addAll(directionalMovement(position, board, moveType, 1, 0));
-            moves.addAll(directionalMovement(position, board, moveType, -1, 0));
-            moves.addAll(directionalMovement(position, board, moveType, 0, 1));
-            moves.addAll(directionalMovement(position, board, moveType, 0, -1));
+            moves.addAll(directionalMovement(position, board, 1, 0));
+            moves.addAll(directionalMovement(position, board, -1, 0));
+            moves.addAll(directionalMovement(position, board, 0, 1));
+            moves.addAll(directionalMovement(position, board, 0, -1));
             return moves;
         }
 
         private static List<Move> bishopMoves(Position position, Board board) {
             var moves = new ArrayList<Move>();
-            moves.addAll(directionalMovement(position, board, MoveType.REGULAR_MOVE, -1, -1));
-            moves.addAll(directionalMovement(position, board, MoveType.REGULAR_MOVE, -1, 1));
-            moves.addAll(directionalMovement(position, board, MoveType.REGULAR_MOVE, 1, -1));
-            moves.addAll(directionalMovement(position, board, MoveType.REGULAR_MOVE, 1, 1));
+            moves.addAll(directionalMovement(position, board, -1, -1));
+            moves.addAll(directionalMovement(position, board, -1, 1));
+            moves.addAll(directionalMovement(position, board, 1, -1));
+            moves.addAll(directionalMovement(position, board, 1, 1));
             return moves;
         }
 
-        private static List<Move> directionalMovement(Position start, Board board, MoveType move, int row, int column) {
+        private static List<Move> directionalMovement(Position start, Board board, int row, int column) {
             var moves = new ArrayList<Move>();
             var position = new Position(start.row + row, start.column + column);
             while (board.isFree(position)) {
-                moves.add(getMove(move, start, position, board));
+                moves.add(new RegularMove(board, start, position));
                 position = new Position(position.row + row, position.column + column);
             }
             if (board.isEnemy(position)) {
-                moves.add(getMove(move, start, position, board));
+                moves.add(new RegularMove(board, start, position));
             }
             return moves;
-        }
-
-        private static Move getMove(MoveType move, Position start, Position end, Board board) {
-            return switch (move) {
-                case SHORT_ROOK_MOVE -> new ShortRookMove(board, start, end);
-                case LONG_ROOK_MOVE -> new LongRookMove(board, start, end);
-                case REGULAR_MOVE -> new RegularMove(board, start, end);
-            };
         }
     }
 
