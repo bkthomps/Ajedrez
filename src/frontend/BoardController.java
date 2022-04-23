@@ -4,12 +4,11 @@ import backend.Game;
 import backend.State;
 import javafx.fxml.FXML;
 import javafx.scene.image.Image;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
-
-import java.io.File;
 
 public class BoardController {
     private static final int ROW_COUNT = 8;
@@ -40,12 +39,25 @@ public class BoardController {
                 // TODO: size should come from a calculation, not hard-coded
                 int size = 600 / 8;
                 var r = new Rectangle(size, size);
-                r.setFill((i + j) % 2 == 0 ? LIGHT_BROWN : DARK_BROWN);
+                var background = (i + j) % 2 == 0 ? LIGHT_BROWN : DARK_BROWN;
+                r.setFill(background);
                 var piece = squares[i][j];
                 if (piece != null) {
                     var imageName = piece.color + "_" + piece.type + ".png";
                     var image = new Image(imageName);
-                    var pattern = new ImagePattern(image);
+                    int w = (int) image.getWidth();
+                    int h = (int) image.getHeight();
+                    var outputImage = new WritableImage(w, h);
+                    var writer = outputImage.getPixelWriter();
+                    var reader = image.getPixelReader();
+                    for (int y = 0; y < h; y++) {
+                        for (int x = 0; x < w; x++) {
+                            var oldPixel = reader.getColor(x, y);
+                            var pixel = reader.getArgb(x, y) == 0 ? background : oldPixel;
+                            writer.setColor(x, y, pixel);
+                        }
+                    }
+                    var pattern = new ImagePattern(outputImage);
                     r.setFill(pattern);
                 }
                 board.add(r, j, i);
