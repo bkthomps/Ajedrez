@@ -1,8 +1,8 @@
 package backend;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public abstract class Move {
     final Board board;
@@ -26,6 +26,25 @@ public abstract class Move {
     public abstract void undo();
 
     abstract boolean partial();
+
+    void updateCastlingRights(Position position) {
+        var piece = board.get(position);
+        if (piece.isEmpty()) {
+            return;
+        }
+        if (piece.get().type != Piece.Type.ROOK) {
+            return;
+        }
+        var color = piece.get().color;
+        if (position.row != color.piecesRow()) {
+            return;
+        }
+        if (position.column == Board.COLUMN_COUNT - 1) {
+            board.canCastleShort.remove(color);
+        } else if (position.column == 0) {
+            board.canCastleLong.remove(color);
+        }
+    }
 }
 
 final class Castling extends Move {
@@ -37,8 +56,8 @@ final class Castling extends Move {
 
     private final Position rookStart;
     private final Position rookEnd;
-    private Set<Color> oldCanCastleShort;
-    private Set<Color> oldCanCastleLong;
+    private List<Color> oldCanCastleShort;
+    private List<Color> oldCanCastleLong;
     private Position oldEnPassantTarget;
     private State state = State.NOT_STARTED;
     private int currentKingColumn;
@@ -57,13 +76,13 @@ final class Castling extends Move {
     @Override
     boolean partial() {
         if (state == State.NOT_STARTED) {
+            oldCanCastleShort = new ArrayList<>(board.canCastleShort);
+            oldCanCastleLong = new ArrayList<>(board.canCastleLong);
+            board.canCastleShort.remove(board.activePlayer);
+            board.canCastleLong.remove(board.activePlayer);
             board.activePlayer = board.activePlayer.next();
             oldEnPassantTarget = board.enPassantTarget;
             board.enPassantTarget = null;
-            oldCanCastleShort = new HashSet<>(board.canCastleShort);
-            oldCanCastleLong = new HashSet<>(board.canCastleLong);
-            board.canCastleShort.remove(board.activePlayer);
-            board.canCastleLong.remove(board.activePlayer);
             state = State.IN_PROGRESS;
             currentKingColumn = start.column;
             return true;
@@ -137,6 +156,8 @@ final class PawnPromotion extends SingleMove {
     private Piece captured;
     private Piece original;
     private final Piece promotion;
+    private List<Color> oldCanCastleShort;
+    private List<Color> oldCanCastleLong;
 
     PawnPromotion(Board board, Position start, Position end, Piece promotion) {
         super(board, start, end);
@@ -151,6 +172,9 @@ final class PawnPromotion extends SingleMove {
     @Override
     boolean partial() {
         super.partial();
+        oldCanCastleShort = new ArrayList<>(board.canCastleShort);
+        oldCanCastleLong = new ArrayList<>(board.canCastleLong);
+        updateCastlingRights(end);
         captured = board.squares[end.row][end.column];
         board.squares[end.row][end.column] = promotion;
         original = board.squares[start.row][start.column];
@@ -163,6 +187,8 @@ final class PawnPromotion extends SingleMove {
         super.undo();
         board.squares[start.row][start.column] = original;
         board.squares[end.row][end.column] = captured;
+        board.canCastleShort = oldCanCastleShort;
+        board.canCastleLong = oldCanCastleLong;
     }
 }
 
@@ -201,6 +227,8 @@ final class EnPassant extends SingleMove {
 
 class RegularMove extends SingleMove {
     private Piece captured;
+    private List<Color> oldCanCastleShort;
+    private List<Color> oldCanCastleLong;
 
     RegularMove(Board board, Position start, Position end) {
         super(board, start, end);
@@ -214,6 +242,9 @@ class RegularMove extends SingleMove {
     @Override
     boolean partial() {
         super.partial();
+        oldCanCastleShort = new ArrayList<>(board.canCastleShort);
+        oldCanCastleLong = new ArrayList<>(board.canCastleLong);
+        updateCastlingRights(end);
         captured = board.squares[end.row][end.column];
         board.squares[end.row][end.column] = board.squares[start.row][start.column];
         board.squares[start.row][start.column] = null;
@@ -225,6 +256,8 @@ class RegularMove extends SingleMove {
         super.undo();
         board.squares[start.row][start.column] = board.squares[end.row][end.column];
         board.squares[end.row][end.column] = captured;
+        board.canCastleShort = oldCanCastleShort;
+        board.canCastleLong = oldCanCastleLong;
     }
 }
 
@@ -250,7 +283,7 @@ final class PawnJump extends RegularMove {
 }
 
 final class ShortRookMove extends RegularMove {
-    private Set<Color> oldCanCastleShort;
+    private List<Color> oldCanCastleShort;
 
     ShortRookMove(Board board, Position start, Position end) {
         super(board, start, end);
@@ -260,7 +293,7 @@ final class ShortRookMove extends RegularMove {
     boolean partial() {
         var activePlayer = board.activePlayer;
         super.partial();
-        oldCanCastleShort = new HashSet<>(board.canCastleShort);
+        oldCanCastleShort = new ArrayList<>(board.canCastleShort);
         board.canCastleShort.remove(activePlayer);
         return false;
     }
@@ -273,7 +306,7 @@ final class ShortRookMove extends RegularMove {
 }
 
 final class LongRookMove extends RegularMove {
-    private Set<Color> oldCanCastleLong;
+    private List<Color> oldCanCastleLong;
 
     LongRookMove(Board board, Position start, Position end) {
         super(board, start, end);
@@ -283,7 +316,7 @@ final class LongRookMove extends RegularMove {
     boolean partial() {
         var activePlayer = board.activePlayer;
         super.partial();
-        oldCanCastleLong = new HashSet<>(board.canCastleLong);
+        oldCanCastleLong = new ArrayList<>(board.canCastleLong);
         board.canCastleLong.remove(activePlayer);
         return false;
     }
@@ -296,8 +329,8 @@ final class LongRookMove extends RegularMove {
 }
 
 final class KingMove extends RegularMove {
-    private Set<Color> oldCanCastleShort;
-    private Set<Color> oldCanCastleLong;
+    private List<Color> oldCanCastleShort;
+    private List<Color> oldCanCastleLong;
 
     KingMove(Board board, Position start, Position end) {
         super(board, start, end);
@@ -305,8 +338,8 @@ final class KingMove extends RegularMove {
 
     @Override
     boolean partial() {
-        oldCanCastleShort = new HashSet<>(board.canCastleShort);
-        oldCanCastleLong = new HashSet<>(board.canCastleLong);
+        oldCanCastleShort = new ArrayList<>(board.canCastleShort);
+        oldCanCastleLong = new ArrayList<>(board.canCastleLong);
         board.canCastleShort.remove(board.activePlayer);
         board.canCastleLong.remove(board.activePlayer);
         super.partial();

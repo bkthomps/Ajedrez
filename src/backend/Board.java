@@ -1,16 +1,16 @@
 package backend;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 final class Board {
     static final int ROW_COUNT = 8;
     static final int COLUMN_COUNT = 8;
 
     final Piece[][] squares = new Piece[ROW_COUNT][COLUMN_COUNT];
-    Set<Color> canCastleShort = new HashSet<>();
-    Set<Color> canCastleLong = new HashSet<>();
+    List<Color> canCastleShort = new ArrayList<>();
+    List<Color> canCastleLong = new ArrayList<>();
     Position enPassantTarget;
     Color activePlayer;
 
