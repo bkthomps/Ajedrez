@@ -26,6 +26,15 @@ public class FenCastlingTest {
     }
 
     @Test
+    void singleCastleKnightCheck() {
+        var state = new Game("r3k2r/3N4/8/8/8/8/8/4K3 b kq - 0 1").generateMoves();
+        assertFalse(state.isTerminal());
+        assertFalse(state.isCheck());
+        var castlingMoves = getCastlingMoves(state.moves());
+        assertEquals(1, castlingMoves.size());
+    }
+
+    @Test
     void canCastleBothSidesWhite() {
         var state = new Game("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1").generateMoves();
         assertFalse(state.isTerminal());
