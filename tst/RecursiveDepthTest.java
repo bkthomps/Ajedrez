@@ -151,6 +151,7 @@ public class RecursiveDepthTest {
         Generate.moves(fen).depth(3).count(2_812).promotions(0).castles(0).enPassant(2).assertAll();
         Generate.moves(fen).depth(4).count(43_238).promotions(0).castles(0).enPassant(123).assertAll();
         Generate.moves(fen).depth(5).count(674_624).promotions(0).castles(0).enPassant(1_165).assertAll();
+        Generate.moves(fen).depth(6).count(11_030_083).promotions(7_552).castles(0).enPassant(33_325).assertAll();
     }
 
     @Test

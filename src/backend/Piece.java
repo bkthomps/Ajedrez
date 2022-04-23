@@ -188,12 +188,6 @@ public final class Piece {
         // The moves which can be made, including those that the king moves into check
         abstract List<Move> possibleMoves(Position position, Board board);
 
-        private enum MoveType {
-            SHORT_ROOK_MOVE,
-            LONG_ROOK_MOVE,
-            REGULAR_MOVE
-        }
-
         private static List<Move> rookMoves(Position position, Board board) {
             var moves = new ArrayList<Move>();
             moves.addAll(directionalMovement(position, board, 1, 0));

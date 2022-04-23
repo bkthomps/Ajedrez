@@ -10,17 +10,16 @@ public final class Game {
         throw new IllegalStateException("Disable default constructor");
     }
 
-    public Game(Color playerColor) {
-        this("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-        // TODO: if the color is not white, call bots until it's the user's turn
-    }
-
     public Game(String fen) {
         board = new Board(fen);
     }
 
-    public String getBoard() {
-        return board.getBoard();
+    public Piece[][] getBoard() {
+        var squares = new Piece[Board.ROW_COUNT][Board.COLUMN_COUNT];
+        for (int i = 0; i < Board.ROW_COUNT; i++) {
+            System.arraycopy(board.squares[i], 0, squares[i], 0, Board.COLUMN_COUNT);
+        }
+        return squares;
     }
 
     public State generateMoves() {
