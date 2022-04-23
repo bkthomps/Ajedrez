@@ -6,8 +6,10 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="frontend.BoardController">
-
-</VBox>
+<GridPane fx:id="board"
+          xmlns="http://javafx.com/javafx"
+          xmlns:fx="http://javafx.com/fxml"
+          prefHeight="600"
+          prefWidth="600"
+          fx:controller="frontend.BoardController">
+</GridPane>

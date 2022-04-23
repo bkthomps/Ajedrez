@@ -19,4 +19,9 @@ public final class Position {
                 && row == that.row
                 && column == that.column;
     }
+
+    @Override
+    public int hashCode() {
+        return row * Board.COLUMN_COUNT + column;
+    }
 }
