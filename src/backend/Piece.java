@@ -165,7 +165,7 @@ public final class Piece {
                         moves.add(new KingMove(board, start, end));
                     }
                 }
-                if (board.canCastleShort.contains(board.activePlayer)) {
+                if (board.shortCastleRights.get(board.activePlayer.bitIndex())) {
                     var rookStart = new Position(start.row, Board.COLUMN_COUNT - 1);
                     if (hasClearPathExclusive(board, start.row, start.column, rookStart.column)) {
                         var kingEnd = new Position(start.row, start.column + CASTLING_KING_JUMP);
@@ -173,7 +173,7 @@ public final class Piece {
                         moves.add(new Castling(board, start, kingEnd, rookStart, rookEnd));
                     }
                 }
-                if (board.canCastleLong.contains(board.activePlayer)) {
+                if (board.longCastleRights.get(board.activePlayer.bitIndex())) {
                     var rookStart = new Position(start.row, 0);
                     if (hasClearPathExclusive(board, start.row, rookStart.column, start.column)) {
                         var kingEnd = new Position(start.row, start.column - CASTLING_KING_JUMP);

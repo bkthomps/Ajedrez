@@ -1,7 +1,6 @@
 package backend;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.BitSet;
 import java.util.Optional;
 
 final class Board {
@@ -9,8 +8,8 @@ final class Board {
     static final int COLUMN_COUNT = 8;
 
     final Piece[][] squares = new Piece[ROW_COUNT][COLUMN_COUNT];
-    List<Color> canCastleShort = new ArrayList<>();
-    List<Color> canCastleLong = new ArrayList<>();
+    BitSet shortCastleRights = new BitSet();
+    BitSet longCastleRights = new BitSet();
     Position enPassantTarget;
     Color activePlayer;
 
@@ -98,10 +97,10 @@ final class Board {
         }
         for (char c : castlingRights.toCharArray()) {
             switch (c) {
-                case 'K' -> canCastleShort.add(Color.WHITE);
-                case 'Q' -> canCastleLong.add(Color.WHITE);
-                case 'k' -> canCastleShort.add(Color.BLACK);
-                case 'q' -> canCastleLong.add(Color.BLACK);
+                case 'K' -> shortCastleRights.set(Color.WHITE.bitIndex());
+                case 'Q' -> longCastleRights.set(Color.WHITE.bitIndex());
+                case 'k' -> shortCastleRights.set(Color.BLACK.bitIndex());
+                case 'q' -> longCastleRights.set(Color.BLACK.bitIndex());
                 default -> throw new IllegalArgumentException("The fen string is malformed");
             }
         }

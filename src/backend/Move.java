@@ -1,7 +1,6 @@
 package backend;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.BitSet;
 import java.util.Optional;
 
 public abstract class Move {
@@ -40,9 +39,9 @@ public abstract class Move {
             return;
         }
         if (position.column == Board.COLUMN_COUNT - 1) {
-            board.canCastleShort.remove(color);
+            board.shortCastleRights.clear(color.bitIndex());
         } else if (position.column == 0) {
-            board.canCastleLong.remove(color);
+            board.longCastleRights.clear(color.bitIndex());
         }
     }
 }
@@ -56,8 +55,8 @@ final class Castling extends Move {
 
     private final Position rookStart;
     private final Position rookEnd;
-    private List<Color> oldCanCastleShort;
-    private List<Color> oldCanCastleLong;
+    private BitSet oldCanCastleShort;
+    private BitSet oldCanCastleLong;
     private Position oldEnPassantTarget;
     private State state = State.NOT_STARTED;
     private int currentKingColumn;
@@ -76,10 +75,10 @@ final class Castling extends Move {
     @Override
     boolean partial() {
         if (state == State.NOT_STARTED) {
-            oldCanCastleShort = new ArrayList<>(board.canCastleShort);
-            oldCanCastleLong = new ArrayList<>(board.canCastleLong);
-            board.canCastleShort.remove(board.activePlayer);
-            board.canCastleLong.remove(board.activePlayer);
+            oldCanCastleShort = (BitSet) board.shortCastleRights.clone();
+            oldCanCastleLong = (BitSet) board.longCastleRights.clone();
+            board.shortCastleRights.clear(board.activePlayer.bitIndex());
+            board.longCastleRights.clear(board.activePlayer.bitIndex());
             board.activePlayer = board.activePlayer.next();
             oldEnPassantTarget = board.enPassantTarget;
             board.enPassantTarget = null;
@@ -116,8 +115,8 @@ final class Castling extends Move {
         board.squares[end.row][end.column] = null;
         board.squares[rookStart.row][rookStart.column] = board.squares[rookEnd.row][rookEnd.column];
         board.squares[rookEnd.row][rookEnd.column] = null;
-        board.canCastleShort = oldCanCastleShort;
-        board.canCastleLong = oldCanCastleLong;
+        board.shortCastleRights = oldCanCastleShort;
+        board.longCastleRights = oldCanCastleLong;
     }
 }
 
@@ -156,8 +155,8 @@ final class PawnPromotion extends SingleMove {
     private Piece captured;
     private Piece original;
     private final Piece promotion;
-    private List<Color> oldCanCastleShort;
-    private List<Color> oldCanCastleLong;
+    private BitSet oldCanCastleShort;
+    private BitSet oldCanCastleLong;
 
     PawnPromotion(Board board, Position start, Position end, Piece promotion) {
         super(board, start, end);
@@ -172,8 +171,8 @@ final class PawnPromotion extends SingleMove {
     @Override
     boolean partial() {
         super.partial();
-        oldCanCastleShort = new ArrayList<>(board.canCastleShort);
-        oldCanCastleLong = new ArrayList<>(board.canCastleLong);
+        oldCanCastleShort = (BitSet) board.shortCastleRights.clone();
+        oldCanCastleLong = (BitSet) board.longCastleRights.clone();
         updateCastlingRights(end);
         captured = board.squares[end.row][end.column];
         board.squares[end.row][end.column] = promotion;
@@ -187,8 +186,8 @@ final class PawnPromotion extends SingleMove {
         super.undo();
         board.squares[start.row][start.column] = original;
         board.squares[end.row][end.column] = captured;
-        board.canCastleShort = oldCanCastleShort;
-        board.canCastleLong = oldCanCastleLong;
+        board.shortCastleRights = oldCanCastleShort;
+        board.longCastleRights = oldCanCastleLong;
     }
 }
 
@@ -227,8 +226,8 @@ final class EnPassant extends SingleMove {
 
 class RegularMove extends SingleMove {
     private Piece captured;
-    private List<Color> oldCanCastleShort;
-    private List<Color> oldCanCastleLong;
+    private BitSet oldCanCastleShort;
+    private BitSet oldCanCastleLong;
 
     RegularMove(Board board, Position start, Position end) {
         super(board, start, end);
@@ -242,8 +241,8 @@ class RegularMove extends SingleMove {
     @Override
     boolean partial() {
         super.partial();
-        oldCanCastleShort = new ArrayList<>(board.canCastleShort);
-        oldCanCastleLong = new ArrayList<>(board.canCastleLong);
+        oldCanCastleShort = (BitSet) board.shortCastleRights.clone();
+        oldCanCastleLong = (BitSet) board.longCastleRights.clone();
         updateCastlingRights(end);
         captured = board.squares[end.row][end.column];
         board.squares[end.row][end.column] = board.squares[start.row][start.column];
@@ -256,8 +255,8 @@ class RegularMove extends SingleMove {
         super.undo();
         board.squares[start.row][start.column] = board.squares[end.row][end.column];
         board.squares[end.row][end.column] = captured;
-        board.canCastleShort = oldCanCastleShort;
-        board.canCastleLong = oldCanCastleLong;
+        board.shortCastleRights = oldCanCastleShort;
+        board.longCastleRights = oldCanCastleLong;
     }
 }
 
@@ -283,7 +282,7 @@ final class PawnJump extends RegularMove {
 }
 
 final class ShortRookMove extends RegularMove {
-    private List<Color> oldCanCastleShort;
+    private BitSet oldCanCastleShort;
 
     ShortRookMove(Board board, Position start, Position end) {
         super(board, start, end);
@@ -293,20 +292,20 @@ final class ShortRookMove extends RegularMove {
     boolean partial() {
         var activePlayer = board.activePlayer;
         super.partial();
-        oldCanCastleShort = new ArrayList<>(board.canCastleShort);
-        board.canCastleShort.remove(activePlayer);
+        oldCanCastleShort = (BitSet) board.shortCastleRights.clone();
+        board.shortCastleRights.clear(activePlayer.bitIndex());
         return false;
     }
 
     @Override
     public void undo() {
         super.undo();
-        board.canCastleShort = oldCanCastleShort;
+        board.shortCastleRights = oldCanCastleShort;
     }
 }
 
 final class LongRookMove extends RegularMove {
-    private List<Color> oldCanCastleLong;
+    private BitSet oldCanCastleLong;
 
     LongRookMove(Board board, Position start, Position end) {
         super(board, start, end);
@@ -316,21 +315,21 @@ final class LongRookMove extends RegularMove {
     boolean partial() {
         var activePlayer = board.activePlayer;
         super.partial();
-        oldCanCastleLong = new ArrayList<>(board.canCastleLong);
-        board.canCastleLong.remove(activePlayer);
+        oldCanCastleLong = (BitSet) board.longCastleRights.clone();
+        board.longCastleRights.clear(activePlayer.bitIndex());
         return false;
     }
 
     @Override
     public void undo() {
         super.undo();
-        board.canCastleLong = oldCanCastleLong;
+        board.longCastleRights = oldCanCastleLong;
     }
 }
 
 final class KingMove extends RegularMove {
-    private List<Color> oldCanCastleShort;
-    private List<Color> oldCanCastleLong;
+    private BitSet oldCanCastleShort;
+    private BitSet oldCanCastleLong;
 
     KingMove(Board board, Position start, Position end) {
         super(board, start, end);
@@ -338,10 +337,10 @@ final class KingMove extends RegularMove {
 
     @Override
     boolean partial() {
-        oldCanCastleShort = new ArrayList<>(board.canCastleShort);
-        oldCanCastleLong = new ArrayList<>(board.canCastleLong);
-        board.canCastleShort.remove(board.activePlayer);
-        board.canCastleLong.remove(board.activePlayer);
+        oldCanCastleShort = (BitSet) board.shortCastleRights.clone();
+        oldCanCastleLong = (BitSet) board.longCastleRights.clone();
+        board.shortCastleRights.clear(board.activePlayer.bitIndex());
+        board.longCastleRights.clear(board.activePlayer.bitIndex());
         super.partial();
         return false;
     }
@@ -349,7 +348,7 @@ final class KingMove extends RegularMove {
     @Override
     public void undo() {
         super.undo();
-        board.canCastleShort = oldCanCastleShort;
-        board.canCastleLong = oldCanCastleLong;
+        board.shortCastleRights = oldCanCastleShort;
+        board.longCastleRights = oldCanCastleLong;
     }
 }

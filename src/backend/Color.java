@@ -37,6 +37,11 @@ public enum Color {
         int endRow() {
             return 0;
         }
+
+        @Override
+        int bitIndex() {
+            return 0;
+        }
     },
     BLACK {
         @Override
@@ -74,6 +79,11 @@ public enum Color {
         int endRow() {
             return Board.ROW_COUNT - 1;
         }
+
+        @Override
+        int bitIndex() {
+            return 1;
+        }
     };
 
     abstract Color next();
@@ -89,4 +99,6 @@ public enum Color {
     abstract int pawnsRow();
 
     abstract int endRow();
+
+    abstract int bitIndex();
 }
