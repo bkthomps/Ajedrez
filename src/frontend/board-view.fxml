@@ -11,5 +11,6 @@
           xmlns:fx="http://javafx.com/fxml"
           prefHeight="600"
           prefWidth="600"
+          onMouseClicked="#onMouseClicked"
           fx:controller="frontend.BoardController">
 </GridPane>

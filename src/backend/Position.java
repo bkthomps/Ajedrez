@@ -1,8 +1,8 @@
 package backend;
 
 public final class Position {
-    final int row;
-    final int column;
+    public final int row;
+    public final int column;
 
     private Position() {
         throw new IllegalStateException("Disable default constructor");

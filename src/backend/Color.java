@@ -3,18 +3,13 @@ package backend;
 public enum Color {
     WHITE {
         @Override
-        Color next() {
+        public Color next() {
             return BLACK;
         }
 
         @Override
-        Color previous() {
+        public Color previous() {
             return BLACK;
-        }
-
-        @Override
-        String code() {
-            return "b";
         }
 
         @Override
@@ -45,18 +40,13 @@ public enum Color {
     },
     BLACK {
         @Override
-        Color next() {
+        public Color next() {
             return WHITE;
         }
 
         @Override
-        Color previous() {
+        public Color previous() {
             return WHITE;
-        }
-
-        @Override
-        String code() {
-            return "w";
         }
 
         @Override
@@ -86,11 +76,9 @@ public enum Color {
         }
     };
 
-    abstract Color next();
+    public abstract Color next();
 
-    abstract Color previous();
-
-    abstract String code();
+    public abstract Color previous();
 
     abstract int pawnMove();
 
