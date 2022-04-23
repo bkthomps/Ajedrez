@@ -1,6 +1,9 @@
 package backend;
 
+
 import java.util.BitSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 final class Board {
@@ -8,6 +11,7 @@ final class Board {
     static final int COLUMN_COUNT = 8;
 
     final Piece[][] squares = new Piece[ROW_COUNT][COLUMN_COUNT];
+    final Map<Color, Integer> plyCount = new HashMap<>();
     BitSet shortCastleRights = new BitSet();
     BitSet longCastleRights = new BitSet();
     Position enPassantTarget;
@@ -15,24 +19,31 @@ final class Board {
 
     Board(String fen) {
         var elements = fen.split(" ");
+        if (elements.length != 4 && elements.length != 6) {
+            throw new IllegalArgumentException("The fen string is malformed: bad attribute count");
+        }
         setBoard(elements[0]);
         setActivePlayer(elements[1]);
         setCastlingRights(elements[2]);
         setEnPassantTarget(elements[3]);
-        // TODO: elements[4] white ply count for 50 move rule
-        // TODO: elements[5] black ply count for 50 move rule
+        if (elements.length == 6) {
+            setPlies(elements[4], elements[5]);
+        } else {
+            setPlies("0", "0");
+        }
+        validateKing();
+        validateCastling();
     }
 
     private void setBoard(String positions) {
         var rows = positions.split("/");
         if (rows.length != ROW_COUNT) {
-            throw new IllegalArgumentException("The fen string is malformed");
+            throw new IllegalArgumentException("The fen string is malformed: row count is incorrect");
         }
         for (int i = 0; i < rows.length; i++) {
             int j = 0;
             for (char c : rows[i].toCharArray()) {
                 if (Character.isDigit(c)) {
-                    // TODO: support more than single digit numbers
                     j += Character.getNumericValue(c);
                     continue;
                 }
@@ -51,10 +62,16 @@ final class Board {
                     case 'k':
                         yield Piece.Type.KING;
                     default:
-                        throw new IllegalArgumentException("The fen string is malformed");
+                        throw new IllegalArgumentException("The fen string is malformed: invalid piece letter");
                 };
+                if (j > COLUMN_COUNT) {
+                    throw new IllegalArgumentException("The fen string is malformed: too many columns");
+                }
                 squares[i][j] = new Piece(piece, color);
                 j++;
+            }
+            if (j != COLUMN_COUNT) {
+                throw new IllegalArgumentException("The fen string is malformed: incorrect column count");
             }
         }
     }
@@ -65,7 +82,7 @@ final class Board {
         } else if (activeColor.equals("b")) {
             activePlayer = Color.BLACK;
         } else {
-            throw new IllegalArgumentException("The fen string is malformed");
+            throw new IllegalArgumentException("The fen string is malformed: invalid active player value");
         }
     }
 
@@ -79,7 +96,7 @@ final class Board {
                 case 'Q' -> longCastleRights.set(Color.WHITE.bitIndex());
                 case 'k' -> shortCastleRights.set(Color.BLACK.bitIndex());
                 case 'q' -> longCastleRights.set(Color.BLACK.bitIndex());
-                default -> throw new IllegalArgumentException("The fen string is malformed");
+                default -> throw new IllegalArgumentException("The fen string is malformed: invalid castling value");
             }
         }
     }
@@ -88,7 +105,87 @@ final class Board {
         if (target.equals("-")) {
             return;
         }
-        // TODO: parse algebraic notation of where it can be captured
+        var chars = target.toCharArray();
+        if (chars.length != 2) {
+            throw new IllegalArgumentException("The fen string is malformed: invalid en passant target");
+        }
+        int column = chars[0] - 'a';
+        if (column < 0 || column >= COLUMN_COUNT) {
+            throw new IllegalArgumentException("The fen string is malformed: invalid en passant target column");
+        }
+        int row = Character.getNumericValue(chars[1]);
+        if (row < 0 || row >= ROW_COUNT) {
+            throw new IllegalArgumentException("The fen string is malformed: invalid en passant target row");
+        }
+        enPassantTarget = new Position(row, column);
+    }
+
+    private void setPlies(String whitePlies, String blackPlies) {
+        try {
+            int whitePlyCount = Integer.parseInt(whitePlies);
+            int blackPlyCount = Integer.parseInt(blackPlies);
+            if (whitePlyCount < 0 || blackPlyCount < 0) {
+                throw new IllegalArgumentException("The fen string is malformed: ply count less than zero");
+            }
+            int maxPlyCount = Game.FIFTY_MOVE_RULE_PLY_COUNT;
+            if (whitePlyCount > maxPlyCount && blackPlyCount > maxPlyCount) {
+                throw new IllegalArgumentException("The fen string is malformed: more plies than 50 move rule allows");
+            }
+            plyCount.put(Color.WHITE, whitePlyCount);
+            plyCount.put(Color.BLACK, blackPlyCount);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("The fen string is malformed: invalid ply count format");
+        }
+    }
+
+    private void validateKing() {
+        int whiteKingCount = 0;
+        int blackKingCount = 0;
+        for (int i = 0; i < ROW_COUNT; i++) {
+            for (int j = 0; j < COLUMN_COUNT; j++) {
+                if (squares[i][j] == null || squares[i][j].type != Piece.Type.KING) {
+                    continue;
+                }
+                if (squares[i][j].color == Color.WHITE) {
+                    whiteKingCount++;
+                } else {
+                    blackKingCount++;
+                }
+            }
+        }
+        if (whiteKingCount != 1) {
+            throw new IllegalArgumentException("The fen string is malformed: must have one white king");
+        }
+        if (blackKingCount != 1) {
+            throw new IllegalArgumentException("The fen string is malformed: must have one black king");
+        }
+    }
+
+    private void validateCastling() {
+        if (longCastleRights.get(Color.BLACK.bitIndex())) {
+            var piece = squares[0][0];
+            if (piece == null || piece.type != Piece.Type.ROOK || piece.color != Color.BLACK) {
+                throw new IllegalArgumentException("The fen string is malformed: invalid castling rights");
+            }
+        }
+        if (shortCastleRights.get(Color.BLACK.bitIndex())) {
+            var piece = squares[0][COLUMN_COUNT - 1];
+            if (piece == null || piece.type != Piece.Type.ROOK || piece.color != Color.BLACK) {
+                throw new IllegalArgumentException("The fen string is malformed: invalid castling rights");
+            }
+        }
+        if (longCastleRights.get(Color.WHITE.bitIndex())) {
+            var piece = squares[ROW_COUNT - 1][0];
+            if (piece == null || piece.type != Piece.Type.ROOK || piece.color != Color.WHITE) {
+                throw new IllegalArgumentException("The fen string is malformed: invalid castling rights");
+            }
+        }
+        if (shortCastleRights.get(Color.WHITE.bitIndex())) {
+            var piece = squares[ROW_COUNT - 1][COLUMN_COUNT - 1];
+            if (piece == null || piece.type != Piece.Type.ROOK || piece.color != Color.WHITE) {
+                throw new IllegalArgumentException("The fen string is malformed: invalid castling rights");
+            }
+        }
     }
 
     private boolean isSquare(Position position) {

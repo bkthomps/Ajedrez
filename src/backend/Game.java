@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class Game {
+    static final int FIFTY_MOVE_RULE_PLY_COUNT = 50;
+
     private final Board board;
 
     private Game() {
