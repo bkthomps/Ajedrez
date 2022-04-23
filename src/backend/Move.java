@@ -4,9 +4,13 @@ import java.util.BitSet;
 import java.util.Optional;
 
 public abstract class Move {
-    final Board board;
     public final Position start;
     public final Position end;
+
+    final Board board;
+
+    private Position oldEnPassantTarget;
+    private boolean called;
 
     Move(Board board, Position start, Position end) {
         this.board = board;
@@ -22,9 +26,23 @@ public abstract class Move {
         }
     }
 
-    public abstract void undo();
+    boolean partial() {
+        if (!called) {
+            called = true;
+        }
+        board.activePlayer = board.activePlayer.next();
+        oldEnPassantTarget = board.enPassantTarget;
+        board.enPassantTarget = null;
+        return false;
+    }
 
-    abstract boolean partial();
+    public void undo() {
+        if (!called) {
+            throw new IllegalStateException("Cannot undo a move that has not been made");
+        }
+        board.activePlayer = board.activePlayer.previous();
+        board.enPassantTarget = oldEnPassantTarget;
+    }
 
     void updateCastlingRights(Position position) {
         var piece = board.get(position);
@@ -55,11 +73,10 @@ final class Castling extends Move {
 
     private final Position rookStart;
     private final Position rookEnd;
-    private BitSet oldCanCastleShort;
-    private BitSet oldCanCastleLong;
-    private Position oldEnPassantTarget;
     private State state = State.NOT_STARTED;
     private int currentKingColumn;
+    private BitSet oldShortCastleRights;
+    private BitSet oldLongCastleRights;
 
     Castling(Board board, Position kingStart, Position kingEnd, Position rookStart, Position rookEnd) {
         super(board, kingStart, kingEnd);
@@ -75,13 +92,11 @@ final class Castling extends Move {
     @Override
     boolean partial() {
         if (state == State.NOT_STARTED) {
-            oldCanCastleShort = (BitSet) board.shortCastleRights.clone();
-            oldCanCastleLong = (BitSet) board.longCastleRights.clone();
+            oldShortCastleRights = (BitSet) board.shortCastleRights.clone();
+            oldLongCastleRights = (BitSet) board.longCastleRights.clone();
             board.shortCastleRights.clear(board.activePlayer.bitIndex());
             board.longCastleRights.clear(board.activePlayer.bitIndex());
-            board.activePlayer = board.activePlayer.next();
-            oldEnPassantTarget = board.enPassantTarget;
-            board.enPassantTarget = null;
+            super.partial();
             state = State.IN_PROGRESS;
             currentKingColumn = start.column;
             return true;
@@ -108,50 +123,18 @@ final class Castling extends Move {
         if (state != State.DONE) {
             throw new IllegalStateException("Move not fully performed");
         }
-        board.activePlayer = board.activePlayer.previous();
-        board.enPassantTarget = oldEnPassantTarget;
+        super.undo();
         state = State.NOT_STARTED;
         board.squares[start.row][start.column] = board.squares[end.row][end.column];
         board.squares[end.row][end.column] = null;
         board.squares[rookStart.row][rookStart.column] = board.squares[rookEnd.row][rookEnd.column];
         board.squares[rookEnd.row][rookEnd.column] = null;
-        board.shortCastleRights = oldCanCastleShort;
-        board.longCastleRights = oldCanCastleLong;
+        board.shortCastleRights = oldShortCastleRights;
+        board.longCastleRights = oldLongCastleRights;
     }
 }
 
-abstract class SingleMove extends Move {
-    private Position oldEnPassantTarget;
-    private boolean didMove;
-
-    SingleMove(Board board, Position start, Position end) {
-        super(board, start, end);
-    }
-
-    @Override
-    boolean partial() {
-        if (didMove) {
-            throw new IllegalStateException("Move already performed");
-        }
-        didMove = true;
-        board.activePlayer = board.activePlayer.next();
-        oldEnPassantTarget = board.enPassantTarget;
-        board.enPassantTarget = null;
-        return false;
-    }
-
-    @Override
-    public void undo() {
-        if (!didMove) {
-            throw new IllegalStateException("Move not yet performed");
-        }
-        didMove = false;
-        board.activePlayer = board.activePlayer.previous();
-        board.enPassantTarget = oldEnPassantTarget;
-    }
-}
-
-final class PawnPromotion extends SingleMove {
+final class PawnPromotion extends Move {
     private Piece captured;
     private Piece original;
     private final Piece promotion;
@@ -191,7 +174,7 @@ final class PawnPromotion extends SingleMove {
     }
 }
 
-final class EnPassant extends SingleMove {
+final class EnPassant extends Move {
     private Piece captured;
     private final Position pawnCapture;
 
@@ -224,7 +207,7 @@ final class EnPassant extends SingleMove {
     }
 }
 
-class RegularMove extends SingleMove {
+class RegularMove extends Move {
     private Piece captured;
     private BitSet oldCanCastleShort;
     private BitSet oldCanCastleLong;
