@@ -20,10 +20,10 @@ import java.util.List;
 public final class BoardController {
     static final int ROW_COUNT = 8;
     static final int COLUMN_COUNT = 8;
-    private static final Color DARK_BROWN = Color.rgb(160, 80, 0);
-    private static final Color LIGHT_BROWN = Color.rgb(200, 100, 0);
-    private static final Color DARK_GREEN = Color.rgb(0, 100, 40);
-    private static final Color LIGHT_GREEN = Color.rgb(0, 140, 50);
+    private static final Color DARK_SQUARE = Color.rgb(160, 80, 0);
+    private static final Color LIGHT_SQUARE = Color.rgb(200, 100, 0);
+    private static final Color DARK_HIGHLIGHTED = Color.rgb(180, 160, 140);
+    private static final Color LIGHT_HIGHLIGHTED = Color.rgb(200, 160, 140);
 
     private Game game;
     private State state;
@@ -221,10 +221,10 @@ public final class BoardController {
     }
 
     private Color getBackground(int i, int j, List<Position> endPositions) {
-        var background = (i + j) % 2 == 0 ? LIGHT_BROWN : DARK_BROWN;
+        var background = (i + j) % 2 == 0 ? LIGHT_SQUARE : DARK_SQUARE;
         for (var end : endPositions) {
             if (end.row == i && end.column == j) {
-                background = (i + j) % 2 == 0 ? LIGHT_GREEN : DARK_GREEN;
+                background = (i + j) % 2 == 0 ? LIGHT_HIGHLIGHTED : DARK_HIGHLIGHTED;
                 break;
             }
         }
