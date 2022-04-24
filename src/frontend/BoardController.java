@@ -2,8 +2,11 @@ package frontend;
 
 import backend.*;
 import bot.BotTurn;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
@@ -34,11 +37,14 @@ public final class BoardController {
     @FXML
     private GridPane board;
 
-    void setPlayerData(PlayerData player, SceneSize size) {
+    void setPlayerData(PlayerData player, Scene scene) {
+        var size = new SceneSize(scene);
         game = new Game("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         displayWhite = (player.color == backend.Color.WHITE);
         players = player.count;
         paintBoard(game, size);
+        scene.widthProperty().addListener((observed, oldWidth, width) -> paintBoard(game, new SceneSize(scene)));
+        scene.heightProperty().addListener((observed, oldHeight, height) -> paintBoard(game, new SceneSize(scene)));
         if (player.color == backend.Color.BLACK && player.count == Players.ONE_PLAYER) {
             state = BotTurn.perform(game);
             paintBoard(game, size);

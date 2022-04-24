@@ -53,8 +53,7 @@ public final class SettingsController {
         window.setScene(scene);
         var controller = (BoardController) loader.getController();
         var playerData = new PlayerData(playerCount, playerColor);
-        var size = new SceneSize(scene);
-        controller.setPlayerData(playerData, size);
+        controller.setPlayerData(playerData, scene);
         window.show();
     }
 }
