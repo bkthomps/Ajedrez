@@ -3,6 +3,7 @@ package frontend;
 import backend.*;
 import bot.BotTurn;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
@@ -43,17 +44,19 @@ public final class BoardController {
             throw new IllegalStateException("Game cannot be terminal on first move");
         }
         activePlayer = player.color;
-        paintBoard(activePlayer, List.of());
+        var size = 600 / 8; // TODO: make this not hard-coded
+        paintBoard(activePlayer, List.of(), size, size);
         // TODO: only works for one player and start white at the moment
         // TODO: make it not static
     }
 
     @FXML
     private void onMouseClicked(MouseEvent event) {
-        // TODO: size should come from a calculation, not hard-coded
-        int size = 600 / 8;
-        int column = (int) event.getX() / size;
-        int row = (int) event.getY() / size;
+        var scene = ((Node) event.getSource()).getScene();
+        var width = scene.getWidth() / COLUMN_COUNT;
+        var height = scene.getHeight() / ROW_COUNT;
+        int column = (int) (event.getX() / width);
+        int row = (int) (event.getY() / height);
         if (state == null || state.isTerminal()) {
             return;
         }
@@ -68,7 +71,7 @@ public final class BoardController {
             if (endPositions.isEmpty()) {
                 start = null;
             }
-            paintBoard(activePlayer, endPositions);
+            paintBoard(activePlayer, endPositions, width, height);
             return;
         }
         var possibleMoves = new ArrayList<Move>();
@@ -105,7 +108,7 @@ public final class BoardController {
             state = null;
             var botState = BotTurn.perform(game);
             if (botState.isTerminal()) {
-                paintBoard(activePlayer, List.of());
+                paintBoard(activePlayer, List.of(), width, height);
                 if (botState.isCheckmate()) {
                     var message = "You have won the game due to " + botState.terminalMessage();
                     var alert = new Alert(Alert.AlertType.NONE, message, ButtonType.OK);
@@ -117,13 +120,13 @@ public final class BoardController {
                 }
                 return;
             }
-            paintBoard(activePlayer, List.of());
+            paintBoard(activePlayer, List.of(), width, height);
             if (player.count != Players.ONE_PLAYER) {
                 activePlayer = activePlayer.next();
             }
             state = game.generateMoves();
             if (state.isTerminal()) {
-                paintBoard(activePlayer, List.of());
+                paintBoard(activePlayer, List.of(), width, height);
                 if (state.isCheckmate()) {
                     var message = "You have lost the game due to " + state.terminalMessage();
                     var alert = new Alert(Alert.AlertType.NONE, message, ButtonType.OK);
@@ -138,19 +141,18 @@ public final class BoardController {
             }
         }
         start = null;
-        paintBoard(activePlayer, List.of());
+        paintBoard(activePlayer, List.of(), width, height);
         if (player.count != Players.ONE_PLAYER) {
             activePlayer = activePlayer.next();
         }
     }
 
-    private void paintBoard(backend.Color activePlayer, List<Position> endPositions) {
+    private void paintBoard(backend.Color activePlayer, List<Position> endPositions, double width, double height) {
+        board.getChildren().clear();
         var squares = game.getBoard();
         for (int i = 0; i < ROW_COUNT; i++) {
             for (int j = 0; j < COLUMN_COUNT; j++) {
-                // TODO: size should come from a calculation, not hard-coded
-                int size = 600 / 8;
-                var r = new Rectangle(size, size);
+                var r = new Rectangle(width, height);
                 var background = (i + j) % 2 == 0 ? LIGHT_BROWN : DARK_BROWN;
                 for (var end : endPositions) {
                     if (end.row == i && end.column == j) {
