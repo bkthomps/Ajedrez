@@ -44,7 +44,7 @@ public final class BoardController {
         scene.widthProperty().addListener((observed, oldWidth, width) -> paintBoard(game, new SceneSize(scene)));
         scene.heightProperty().addListener((observed, oldHeight, height) -> paintBoard(game, new SceneSize(scene)));
         if (player.color == backend.Color.BLACK && player.count == Players.ONE_PLAYER) {
-            state = BotTurn.perform(game);
+            state = BotTurn.perform(game, !displayWhite);
             paintBoard(game, size);
             if (state.isTerminal()) {
                 alertUserTerminatedGame(state, "You have won");
@@ -103,7 +103,7 @@ public final class BoardController {
         }
         paintBoard(game, size);
         if (players == Players.ONE_PLAYER) {
-            state = BotTurn.perform(game);
+            state = BotTurn.perform(game, !displayWhite);
             paintBoard(game, size);
             if (state.isTerminal()) {
                 alertUserTerminatedGame(state, "You have won");

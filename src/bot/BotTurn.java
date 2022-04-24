@@ -11,40 +11,48 @@ public final class BotTurn {
     private static final int ROOK_VALUE = 500;
     private static final int QUEEN_VALUE = 900;
 
-    public static State perform(Game game) {
+    public static State perform(Game game, boolean isBotWhite) {
         var state = game.generateMoves();
         if (state.isTerminal()) {
             return state;
         }
+        Move bestMove = null;
+        int bestEvaluation = Integer.MIN_VALUE;
         var moves = state.moves();
-        int size = moves.size();
-        int index = (int) (size * Math.random());
-        moves.get(index).perform();
+        for (var move : moves) {
+            int moveEvaluation = -evaluate(game, move, !isBotWhite, 3);
+            if (moveEvaluation > bestEvaluation) {
+                bestEvaluation = moveEvaluation;
+                bestMove = move;
+            }
+        }
+        if (bestMove == null) {
+            throw new IllegalStateException("No best move found");
+        }
+        bestMove.perform();
         return state;
     }
 
-    private static int evaluate(Game game, Color activePlayer, int depth) {
+    private static int evaluate(Game game, Move move, boolean isBotWhite, int depth) {
         if (depth == 0) {
-            return evaluate(game.getBoard(), activePlayer);
+            return evaluate(game.getBoard(), isBotWhite);
         }
+        move.perform();
         var state = game.generateMoves();
         if (state.isTerminal()) {
-            if (state.isCheckmate()) {
-                return Integer.MIN_VALUE;
-            }
-            return 0;
+            move.undo();
+            return state.isCheckmate() ? Integer.MIN_VALUE : 0;
         }
         int bestEvaluation = Integer.MIN_VALUE;
-        for (var move : state.moves()) {
-            move.perform();
-            int evaluation = -evaluate(game, activePlayer, depth);
+        for (var deeperMove : state.moves()) {
+            int evaluation = -evaluate(game, deeperMove, !isBotWhite, depth - 1);
             bestEvaluation = Math.max(evaluation, bestEvaluation);
-            move.undo();
         }
+        move.undo();
         return bestEvaluation;
     }
 
-    private static int evaluate(Piece[][] squares, Color activePlayer) {
+    private static int evaluate(Piece[][] squares, boolean isWhite) {
         int whiteQueenCount = 0;
         int blackQueenCount = 0;
         int whiteRookCount = 0;
@@ -122,7 +130,6 @@ public final class BotTurn {
         value -= PieceSquareTables.evaluate(
                 squares[blackKing.row][blackKing.column], blackKing.row, blackKing.column, isEndgame
         );
-        int factor = (activePlayer == Color.WHITE) ? 1 : -1;
-        return factor * value;
+        return isWhite ? value : -value;
     }
 }
