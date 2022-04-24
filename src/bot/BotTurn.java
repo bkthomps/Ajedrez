@@ -12,10 +12,11 @@ public final class BotTurn {
 
     static {
         values.put(Piece.Type.PAWN, 100);
-        values.put(Piece.Type.KNIGHT, 300);
-        values.put(Piece.Type.BISHOP, 300);
+        values.put(Piece.Type.KNIGHT, 320);
+        values.put(Piece.Type.BISHOP, 330);
         values.put(Piece.Type.ROOK, 500);
         values.put(Piece.Type.QUEEN, 900);
+        values.put(Piece.Type.KING, 20_000);
     }
 
     public static State perform(Game game) {
