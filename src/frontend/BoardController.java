@@ -20,26 +20,25 @@ import java.util.List;
 public final class BoardController {
     private static final int ROW_COUNT = 8;
     private static final int COLUMN_COUNT = 8;
-
     private static final Color DARK_BROWN = Color.rgb(160, 80, 0);
     private static final Color LIGHT_BROWN = Color.rgb(200, 100, 0);
     private static final Color DARK_GREEN = Color.rgb(0, 100, 40);
     private static final Color LIGHT_GREEN = Color.rgb(0, 140, 50);
 
-    private static PlayerData player;
-    private static Game game;
-    private static State state;
-    private static Position start;
-    private static backend.Color activePlayer;
+    private PlayerData player;
+    private Game game;
+    private State state;
+    private Position start;
+    private backend.Color activePlayer;
 
     @FXML
     private GridPane board;
 
     void setPlayerData(PlayerData player) {
-        BoardController.player = player;
-        BoardController.game = new Game("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-        BoardController.state = BoardController.game.generateMoves();
-        if (BoardController.state.isTerminal()) {
+        this.player = player;
+        game = new Game("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        state = game.generateMoves();
+        if (state.isTerminal()) {
             // TODO: improve this edge-case
             throw new IllegalStateException("Game cannot be terminal on first move");
         }
