@@ -29,6 +29,7 @@ public final class BoardController {
     private State state;
     private Position moveStart;
     private boolean displayWhite;
+    private Players players;
 
     @FXML
     private GridPane board;
@@ -36,7 +37,8 @@ public final class BoardController {
     void setPlayerData(PlayerData player, SceneSize size) {
         game = new Game("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         displayWhite = (player.color == backend.Color.WHITE);
-        if (!displayWhite && player.count == Players.ONE_PLAYER) {
+        players = player.count;
+        if (player.color == backend.Color.BLACK && player.count == Players.ONE_PLAYER) {
             state = BotTurn.perform(game);
             paintBoard(game, size);
             if (state.isTerminal()) {
@@ -47,8 +49,18 @@ public final class BoardController {
         state = game.generateMoves();
         paintBoard(game, size);
         if (state.isTerminal()) {
-            alertUserTerminatedGame(state, "You have lost");
+            alertUserTerminatedGame(state, getTerminalMessage());
         }
+    }
+
+    private String getTerminalMessage() {
+        if (players == Players.ONE_PLAYER) {
+            return "You have lost";
+        }
+        if (displayWhite) {
+            return "Black has won";
+        }
+        return "White has won";
     }
 
     @FXML
@@ -82,16 +94,21 @@ public final class BoardController {
         }
         var move = getSelectedMove(possibleMoves, promoteTo);
         move.perform();
-        state = BotTurn.perform(game);
+        if (players == Players.TWO_PLAYERS) {
+            displayWhite = !displayWhite;
+        }
         paintBoard(game, size);
-        if (state.isTerminal()) {
-            alertUserTerminatedGame(state, "You have won");
-            return;
+        if (players == Players.ONE_PLAYER) {
+            state = BotTurn.perform(game);
+            paintBoard(game, size);
+            if (state.isTerminal()) {
+                alertUserTerminatedGame(state, "You have won");
+                return;
+            }
         }
         state = game.generateMoves();
-        paintBoard(game, size);
         if (state.isTerminal()) {
-            alertUserTerminatedGame(state, "You have lost");
+            alertUserTerminatedGame(state, getTerminalMessage());
         }
     }
 
