@@ -4,8 +4,8 @@ import backend.Color;
 import backend.Piece;
 import backend.Position;
 
-final class Transposition {
-    private static final int[][] PAWN_TRANSPOSITION = new int[][]{
+final class PieceSquareTables {
+    private static final int[][] PAWN = new int[][]{
             new int[]{0, 0, 0, 0, 0, 0, 0, 0},
             new int[]{50, 50, 50, 50, 50, 50, 50, 50},
             new int[]{10, 10, 20, 30, 30, 20, 10, 10},
@@ -16,7 +16,7 @@ final class Transposition {
             new int[]{0, 0, 0, 0, 0, 0, 0, 0},
     };
 
-    private static final int[][] KNIGHT_TRANSPOSITION = new int[][]{
+    private static final int[][] KNIGHT = new int[][]{
             new int[]{-50, -40, -30, -30, -30, -30, -40, -50},
             new int[]{-40, -20, 0, 0, 0, 0, -20, -40},
             new int[]{-30, 0, 10, 15, 15, 10, 0, -30},
@@ -27,7 +27,7 @@ final class Transposition {
             new int[]{-50, -40, -30, -30, -30, -30, -40, -50},
     };
 
-    private static final int[][] BISHOP_TRANSPOSITION = new int[][]{
+    private static final int[][] BISHOP = new int[][]{
             new int[]{-20, -10, -10, -10, -10, -10, -10, -20},
             new int[]{-10, 0, 0, 0, 0, 0, 0, -10},
             new int[]{-10, 0, 5, 10, 10, 5, 0, -10},
@@ -38,7 +38,7 @@ final class Transposition {
             new int[]{-20, -10, -10, -10, -10, -10, -10, -20},
     };
 
-    private static final int[][] ROOK_TRANSPOSITION = new int[][]{
+    private static final int[][] ROOK = new int[][]{
             new int[]{0, 0, 0, 0, 0, 0, 0, 0},
             new int[]{5, 10, 10, 10, 10, 10, 10, 5},
             new int[]{-5, 0, 0, 0, 0, 0, 0, -5},
@@ -49,7 +49,7 @@ final class Transposition {
             new int[]{0, 0, 0, 5, 5, 0, 0, 0},
     };
 
-    private static final int[][] QUEEN_TRANSPOSITION = new int[][]{
+    private static final int[][] QUEEN = new int[][]{
             new int[]{-20, -10, -10, -5, -5, -10, -10, -20},
             new int[]{-10, 0, 0, 0, 0, 0, 0, -10},
             new int[]{-10, 0, 5, 5, 5, 5, 0, -10},
@@ -60,7 +60,7 @@ final class Transposition {
             new int[]{-20, -10, -10, -5, -5, -10, -10, -20},
     };
 
-    private static final int[][] EARLY_GAME_KING_TRANSPOSITION = new int[][]{
+    private static final int[][] EARLY_GAME_KING = new int[][]{
             new int[]{-30, -40, -40, -50, -50, -40, -40, -30},
             new int[]{-30, -40, -40, -50, -50, -40, -40, -30},
             new int[]{-30, -40, -40, -50, -50, -40, -40, -30},
@@ -76,7 +76,7 @@ final class Transposition {
      *   1. Both sides have no queens, or
      *   2. Every side which has a queen has one minor piece maximum
      */
-    private static final int[][] LATE_GAME_KING_TRANSPOSITION = new int[][]{
+    private static final int[][] LATE_GAME_KING = new int[][]{
             new int[]{-50, -40, -30, -20, -20, -30, -40, -50},
             new int[]{-30, -20, -10, 0, 0, -10, -20, -30},
             new int[]{-30, -10, 20, 30, 30, 20, -10, -30},
@@ -87,6 +87,7 @@ final class Transposition {
             new int[]{-50, -30, -30, -30, -30, -30, -30, -50},
     };
 
+    // TODO: king has to be evaluated last so we know if it's late game
     static int evaluate(Piece piece, Position position, boolean isLateGame) {
         int row = position.row;
         if (piece.color != Color.WHITE) {
@@ -94,20 +95,20 @@ final class Transposition {
         }
         switch (piece.type) {
             case PAWN:
-                return PAWN_TRANSPOSITION[row][position.column];
+                return PAWN[row][position.column];
             case KNIGHT:
-                return KNIGHT_TRANSPOSITION[row][position.column];
+                return KNIGHT[row][position.column];
             case BISHOP:
-                return BISHOP_TRANSPOSITION[row][position.column];
+                return BISHOP[row][position.column];
             case ROOK:
-                return ROOK_TRANSPOSITION[row][position.column];
+                return ROOK[row][position.column];
             case QUEEN:
-                return QUEEN_TRANSPOSITION[row][position.column];
+                return QUEEN[row][position.column];
             case KING:
                 if (isLateGame) {
-                    return LATE_GAME_KING_TRANSPOSITION[row][position.column];
+                    return LATE_GAME_KING[row][position.column];
                 }
-                return EARLY_GAME_KING_TRANSPOSITION[row][position.column];
+                return EARLY_GAME_KING[row][position.column];
             default:
                 throw new IllegalStateException("Invalid piece type for evaluation");
         }
