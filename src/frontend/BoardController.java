@@ -35,7 +35,7 @@ public final class BoardController {
     void setPlayerData(PlayerData player, SceneSize size) {
         game = new Game("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         state = game.generateMoves();
-        paintBoard(size, List.of());
+        paintBoard(game, size, List.of());
     }
 
     @FXML
@@ -47,64 +47,39 @@ public final class BoardController {
         var size = new SceneSize(scene);
         var clickPosition = getClickPosition(size, event);
         if (moveStart == null) {
-            moveStart = getStartMovePosition(size, clickPosition);
+            var endPositions = getEndPositions(state, clickPosition);
+            if (endPositions.isEmpty()) {
+                moveStart = null;
+                return;
+            }
+            moveStart = clickPosition;
+            paintBoard(game, size, endPositions);
             return;
         }
-        var possibleMoves = getPossibleMoves(moveStart, clickPosition);
+        var possibleMoves = getPossibleMoves(state, moveStart, clickPosition);
+        moveStart = null;
+        if (possibleMoves.isEmpty()) {
+            paintBoard(game, size, List.of());
+            return;
+        }
         var promotions = getPiecePromotions(possibleMoves);
         Piece.Type promoteTo = null;
         if (!promotions.isEmpty()) {
-            var buttons = new ButtonType[promotions.size()];
-            for (int i = 0; i < buttons.length; i++) {
-                buttons[i] = new ButtonType(promotions.get(i).toString());
-            }
-            var alert = new Alert(Alert.AlertType.NONE, "What should this pawn be promoted to?", buttons);
-            var result = alert.showAndWait();
-            var button = result.orElse(buttons[0]);
-            for (int i = 0; i < buttons.length; i++) {
-                if (buttons[i].equals(button)) {
-                    promoteTo = promotions.get(i);
-                }
-            }
+            promoteTo = getPromotionPieceFromUser(promotions);
         }
-        for (var move : possibleMoves) {
-            var promotion = move.promotionPieceType();
-            if (promotion.isPresent() && promotion.get() != promoteTo) {
-                continue;
-            }
-            move.perform();
-            state = BotTurn.perform(game);
-            if (state.isTerminal()) {
-                paintBoard(size, List.of());
-                if (state.isCheckmate()) {
-                    var message = "You have won the game due to " + state.terminalMessage();
-                    var alert = new Alert(Alert.AlertType.NONE, message, ButtonType.OK);
-                    alert.showAndWait();
-                } else if (state.isTie()) {
-                    var message = "You have tied the game due to " + state.terminalMessage();
-                    var alert = new Alert(Alert.AlertType.NONE, message, ButtonType.OK);
-                    alert.showAndWait();
-                }
-                return;
-            }
-            paintBoard(size, List.of());
-            state = game.generateMoves();
-            if (state.isTerminal()) {
-                paintBoard(size, List.of());
-                if (state.isCheckmate()) {
-                    var message = "You have lost the game due to " + state.terminalMessage();
-                    var alert = new Alert(Alert.AlertType.NONE, message, ButtonType.OK);
-                    alert.showAndWait();
-                } else if (state.isTie()) {
-                    var message = "You have tied the game due to " + state.terminalMessage();
-                    var alert = new Alert(Alert.AlertType.NONE, message, ButtonType.OK);
-                    alert.showAndWait();
-                }
-                return;
-            }
+        var move = getSelectedMove(possibleMoves, promoteTo);
+        move.perform();
+        state = BotTurn.perform(game);
+        paintBoard(game, size, List.of());
+        if (state.isTerminal()) {
+            alertUserTerminatedGame(state, "won");
+            return;
         }
-        moveStart = null;
-        paintBoard(size, List.of());
+        state = game.generateMoves();
+        paintBoard(game, size, List.of());
+        if (state.isTerminal()) {
+            alertUserTerminatedGame(state, "lost");
+        }
     }
 
     private Position getClickPosition(SceneSize size, MouseEvent event) {
@@ -113,21 +88,17 @@ public final class BoardController {
         return new Position(row, column);
     }
 
-    private Position getStartMovePosition(SceneSize size, Position clickPosition) {
+    private List<Position> getEndPositions(State state, Position clickPosition) {
         var endPositions = new ArrayList<Position>();
         for (var move : state.moves()) {
             if (move.start.equals(clickPosition)) {
                 endPositions.add(move.end);
             }
         }
-        if (endPositions.isEmpty()) {
-            return null;
-        }
-        paintBoard(size, endPositions);
-        return clickPosition;
+        return endPositions;
     }
 
-    private List<Move> getPossibleMoves(Position moveStart, Position clickPosition) {
+    private List<Move> getPossibleMoves(State state, Position moveStart, Position clickPosition) {
         var possibleMoves = new ArrayList<Move>();
         for (var move : state.moves()) {
             if (move.start.equals(moveStart) && move.end.equals(clickPosition)) {
@@ -146,7 +117,46 @@ public final class BoardController {
         return promotions;
     }
 
-    private void paintBoard(SceneSize size, List<Position> endPositions) {
+    private Piece.Type getPromotionPieceFromUser(List<Piece.Type> promotions) {
+        Piece.Type promoteTo = null;
+        var buttons = new ButtonType[promotions.size()];
+        for (int i = 0; i < buttons.length; i++) {
+            buttons[i] = new ButtonType(promotions.get(i).toString());
+        }
+        var alert = new Alert(Alert.AlertType.NONE, "What should this pawn be promoted to?", buttons);
+        var result = alert.showAndWait();
+        var button = result.orElse(buttons[0]);
+        for (int i = 0; i < buttons.length; i++) {
+            if (buttons[i].equals(button)) {
+                promoteTo = promotions.get(i);
+            }
+        }
+        return promoteTo;
+    }
+
+    private Move getSelectedMove(List<Move> possibleMoves, Piece.Type promoteTo) {
+        for (var move : possibleMoves) {
+            var promotion = move.promotionPieceType();
+            if (promotion.isPresent() && promotion.get() != promoteTo) {
+                continue;
+            }
+            return move;
+        }
+        throw new IllegalStateException("No selected move");
+    }
+
+    private void alertUserTerminatedGame(State state, String winStatus) {
+        String message;
+        if (state.isCheckmate()) {
+            message = "You have " + winStatus + " the game due to " + state.terminalMessage();
+        } else {
+            message = "You have tied the game due to " + state.terminalMessage();
+        }
+        var alert = new Alert(Alert.AlertType.NONE, message, ButtonType.OK);
+        alert.showAndWait();
+    }
+
+    private void paintBoard(Game game, SceneSize size, List<Position> endPositions) {
         board.getChildren().clear();
         var squares = game.getBoard();
         for (int i = 0; i < ROW_COUNT; i++) {
