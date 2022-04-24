@@ -39,7 +39,8 @@ public final class BoardController {
         BoardController.game = new Game("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         BoardController.state = BoardController.game.generateMoves();
         if (BoardController.state.isTerminal()) {
-            // TODO: end game
+            // TODO: improve this edge-case
+            throw new IllegalStateException("Game cannot be terminal on first move");
         }
         activePlayer = player.color;
         paintBoard(activePlayer, List.of());
@@ -74,7 +75,6 @@ public final class BoardController {
         var promotions = new ArrayList<Piece.Type>();
         var end = new Position(row, column);
         for (var move : state.moves()) {
-            // TODO: can have more than 1 for promotions, check this
             if (move.start.equals(start) && move.end.equals(end)) {
                 possibleMoves.add(move);
                 var promotion = move.promotionPieceType();
@@ -105,7 +105,16 @@ public final class BoardController {
             state = null;
             var botState = BotTurn.perform(game);
             if (botState.isTerminal()) {
-                // TODO: end game
+                paintBoard(activePlayer, List.of());
+                if (botState.isCheckmate()) {
+                    var message = "You have won the game due to " + botState.terminalMessage();
+                    var alert = new Alert(Alert.AlertType.NONE, message, ButtonType.OK);
+                    alert.showAndWait();
+                } else if (botState.isTie()) {
+                    var message = "You have tied the game due to " + botState.terminalMessage();
+                    var alert = new Alert(Alert.AlertType.NONE, message, ButtonType.OK);
+                    alert.showAndWait();
+                }
                 return;
             }
             paintBoard(activePlayer, List.of());
@@ -114,7 +123,17 @@ public final class BoardController {
             }
             state = game.generateMoves();
             if (state.isTerminal()) {
-                // TODO: end game
+                paintBoard(activePlayer, List.of());
+                if (state.isCheckmate()) {
+                    var message = "You have lost the game due to " + state.terminalMessage();
+                    var alert = new Alert(Alert.AlertType.NONE, message, ButtonType.OK);
+                    alert.showAndWait();
+                } else if (state.isTie()) {
+                    var message = "You have tied the game due to " + state.terminalMessage();
+                    var alert = new Alert(Alert.AlertType.NONE, message, ButtonType.OK);
+                    alert.showAndWait();
+                }
+                state = null;
                 return;
             }
         }
