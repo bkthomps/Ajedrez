@@ -45,27 +45,15 @@ public final class BoardController {
         }
         var scene = ((Node) event.getSource()).getScene();
         var size = new SceneSize(scene);
-        int column = (int) (event.getX() / size.width);
-        int row = (int) (event.getY() / size.height);
+        var clickPosition = getClickPosition(size, event);
         if (moveStart == null) {
-            moveStart = new Position(row, column);
-            var endPositions = new ArrayList<Position>();
-            for (var move : state.moves()) {
-                if (move.start.equals(moveStart)) {
-                    endPositions.add(move.end);
-                }
-            }
-            if (endPositions.isEmpty()) {
-                moveStart = null;
-            }
-            paintBoard(size, endPositions);
+            moveStart = getStartMovePosition(size, clickPosition);
             return;
         }
         var possibleMoves = new ArrayList<Move>();
         var promotions = new ArrayList<Piece.Type>();
-        var end = new Position(row, column);
         for (var move : state.moves()) {
-            if (move.start.equals(moveStart) && move.end.equals(end)) {
+            if (move.start.equals(moveStart) && move.end.equals(clickPosition)) {
                 possibleMoves.add(move);
                 var promotion = move.promotionPieceType();
                 promotion.ifPresent(promotions::add);
@@ -124,6 +112,26 @@ public final class BoardController {
         }
         moveStart = null;
         paintBoard(size, List.of());
+    }
+
+    private Position getClickPosition(SceneSize size, MouseEvent event) {
+        int column = (int) (event.getX() / size.width);
+        int row = (int) (event.getY() / size.height);
+        return new Position(row, column);
+    }
+
+    private Position getStartMovePosition(SceneSize size, Position clickPosition) {
+        var endPositions = new ArrayList<Position>();
+        for (var move : state.moves()) {
+            if (move.start.equals(clickPosition)) {
+                endPositions.add(move.end);
+            }
+        }
+        if (endPositions.isEmpty()) {
+            return null;
+        }
+        paintBoard(size, endPositions);
+        return clickPosition;
     }
 
     private void paintBoard(SceneSize size, List<Position> endPositions) {
