@@ -8,5 +8,6 @@
           prefHeight="600"
           prefWidth="600"
           onMouseClicked="#onMouseClicked"
+          snapToPixel="false"
           fx:controller="frontend.BoardController">
 </GridPane>
