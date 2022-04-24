@@ -23,6 +23,27 @@ public final class BotTurn {
         return state;
     }
 
+    private static int evaluate(Game game, Color activePlayer, int depth) {
+        if (depth == 0) {
+            return evaluate(game.getBoard(), activePlayer);
+        }
+        var state = game.generateMoves();
+        if (state.isTerminal()) {
+            if (state.isCheckmate()) {
+                return Integer.MIN_VALUE;
+            }
+            return 0;
+        }
+        int bestEvaluation = Integer.MIN_VALUE;
+        for (var move : state.moves()) {
+            move.perform();
+            int evaluation = -evaluate(game, activePlayer, depth);
+            bestEvaluation = Math.max(evaluation, bestEvaluation);
+            move.undo();
+        }
+        return bestEvaluation;
+    }
+
     private static int evaluate(Piece[][] squares, Color activePlayer) {
         int whiteQueenCount = 0;
         int blackQueenCount = 0;
