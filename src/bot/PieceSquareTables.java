@@ -88,27 +88,26 @@ final class PieceSquareTables {
     };
 
     // TODO: king has to be evaluated last so we know if it's late game
-    static int evaluate(Piece piece, Position position, boolean isLateGame) {
-        int row = position.row;
+    static int evaluate(Piece piece, int row, int column, boolean isLateGame) {
         if (piece.color != Color.WHITE) {
-            row = BotTurn.ROW_COUNT - 1 - position.row;
+            row = BotTurn.ROW_COUNT - 1 - row;
         }
         switch (piece.type) {
             case PAWN:
-                return PAWN[row][position.column];
+                return PAWN[row][column];
             case KNIGHT:
-                return KNIGHT[row][position.column];
+                return KNIGHT[row][column];
             case BISHOP:
-                return BISHOP[row][position.column];
+                return BISHOP[row][column];
             case ROOK:
-                return ROOK[row][position.column];
+                return ROOK[row][column];
             case QUEEN:
-                return QUEEN[row][position.column];
+                return QUEEN[row][column];
             case KING:
                 if (isLateGame) {
-                    return LATE_GAME_KING[row][position.column];
+                    return LATE_GAME_KING[row][column];
                 }
-                return EARLY_GAME_KING[row][position.column];
+                return EARLY_GAME_KING[row][column];
             default:
                 throw new IllegalStateException("Invalid piece type for evaluation");
         }
