@@ -28,14 +28,27 @@ public final class BoardController {
     private Game game;
     private State state;
     private Position moveStart;
+    private boolean displayWhite;
 
     @FXML
     private GridPane board;
 
     void setPlayerData(PlayerData player, SceneSize size) {
         game = new Game("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        displayWhite = (player.color == backend.Color.WHITE);
+        if (!displayWhite && player.count == Players.ONE_PLAYER) {
+            state = BotTurn.perform(game);
+            paintBoard(game, size);
+            if (state.isTerminal()) {
+                alertUserTerminatedGame(state, "You have won");
+                return;
+            }
+        }
         state = game.generateMoves();
-        paintBoard(game, size, List.of());
+        paintBoard(game, size);
+        if (state.isTerminal()) {
+            alertUserTerminatedGame(state, "You have lost");
+        }
     }
 
     @FXML
@@ -59,7 +72,7 @@ public final class BoardController {
         var possibleMoves = getPossibleMoves(state, moveStart, clickPosition);
         moveStart = null;
         if (possibleMoves.isEmpty()) {
-            paintBoard(game, size, List.of());
+            paintBoard(game, size);
             return;
         }
         var promotions = getPiecePromotions(possibleMoves);
@@ -70,22 +83,22 @@ public final class BoardController {
         var move = getSelectedMove(possibleMoves, promoteTo);
         move.perform();
         state = BotTurn.perform(game);
-        paintBoard(game, size, List.of());
+        paintBoard(game, size);
         if (state.isTerminal()) {
-            alertUserTerminatedGame(state, "won");
+            alertUserTerminatedGame(state, "You have won");
             return;
         }
         state = game.generateMoves();
-        paintBoard(game, size, List.of());
+        paintBoard(game, size);
         if (state.isTerminal()) {
-            alertUserTerminatedGame(state, "lost");
+            alertUserTerminatedGame(state, "You have lost");
         }
     }
 
     private Position getClickPosition(SceneSize size, MouseEvent event) {
         int column = (int) (event.getX() / size.width);
         int row = (int) (event.getY() / size.height);
-        return new Position(row, column);
+        return new Position(maybeReverse(row, !displayWhite), column);
     }
 
     private List<Position> getEndPositions(State state, Position clickPosition) {
@@ -148,7 +161,7 @@ public final class BoardController {
     private void alertUserTerminatedGame(State state, String winStatus) {
         String message;
         if (state.isCheckmate()) {
-            message = "You have " + winStatus + " the game due to " + state.terminalMessage();
+            message = winStatus + " the game due to " + state.terminalMessage();
         } else {
             message = "You have tied the game due to " + state.terminalMessage();
         }
@@ -156,10 +169,19 @@ public final class BoardController {
         alert.showAndWait();
     }
 
+    private void paintBoard(Game game, SceneSize size) {
+        paintBoardInternal(game, size, List.of(), !displayWhite);
+    }
+
     private void paintBoard(Game game, SceneSize size, List<Position> endPositions) {
+        paintBoardInternal(game, size, endPositions, !displayWhite);
+    }
+
+    private void paintBoardInternal(Game game, SceneSize size, List<Position> endPositions, boolean isReverse) {
         board.getChildren().clear();
         var squares = game.getBoard();
         for (int i = 0; i < ROW_COUNT; i++) {
+            int index = maybeReverse(i, isReverse);
             for (int j = 0; j < COLUMN_COUNT; j++) {
                 var r = new Rectangle(size.width, size.height);
                 var background = getBackground(i, j, endPositions);
@@ -169,9 +191,16 @@ public final class BoardController {
                     var image = getPieceImage(piece, background);
                     r.setFill(image);
                 }
-                board.add(r, j, i);
+                board.add(r, j, index);
             }
         }
+    }
+
+    private int maybeReverse(int index, boolean isReverse) {
+        if (!isReverse) {
+            return index;
+        }
+        return ROW_COUNT - 1 - index;
     }
 
     private Color getBackground(int i, int j, List<Position> endPositions) {
