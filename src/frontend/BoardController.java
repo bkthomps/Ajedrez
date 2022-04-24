@@ -2,8 +2,6 @@ package frontend;
 
 import backend.*;
 import bot.BotTurn;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -248,7 +246,7 @@ public final class BoardController {
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
                 var oldPixel = reader.getColor(x, y);
-                var pixel = reader.getArgb(x, y) == 0 ? background : oldPixel;
+                var pixel = reader.getColor(x, y).isOpaque() ? oldPixel : background;
                 writer.setColor(x, y, pixel);
             }
         }
