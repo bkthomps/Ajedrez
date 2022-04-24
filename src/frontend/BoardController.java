@@ -27,7 +27,7 @@ public final class BoardController {
 
     private Game game;
     private State state;
-    private Position start;
+    private Position moveStart;
 
     @FXML
     private GridPane board;
@@ -35,33 +35,28 @@ public final class BoardController {
     void setPlayerData(PlayerData player, SceneSize size) {
         game = new Game("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         state = game.generateMoves();
-        if (state.isTerminal()) {
-            // TODO: improve this edge-case
-            throw new IllegalStateException("Game cannot be terminal on first move");
-        }
         paintBoard(size, List.of());
-        // TODO: only works for one player and start white at the moment
     }
 
     @FXML
     private void onMouseClicked(MouseEvent event) {
+        if (state.isTerminal()) {
+            return;
+        }
         var scene = ((Node) event.getSource()).getScene();
         var size = new SceneSize(scene);
         int column = (int) (event.getX() / size.width);
         int row = (int) (event.getY() / size.height);
-        if (state == null || state.isTerminal()) {
-            return;
-        }
-        if (start == null) {
-            start = new Position(row, column);
+        if (moveStart == null) {
+            moveStart = new Position(row, column);
             var endPositions = new ArrayList<Position>();
             for (var move : state.moves()) {
-                if (move.start.equals(start)) {
+                if (move.start.equals(moveStart)) {
                     endPositions.add(move.end);
                 }
             }
             if (endPositions.isEmpty()) {
-                start = null;
+                moveStart = null;
             }
             paintBoard(size, endPositions);
             return;
@@ -70,7 +65,7 @@ public final class BoardController {
         var promotions = new ArrayList<Piece.Type>();
         var end = new Position(row, column);
         for (var move : state.moves()) {
-            if (move.start.equals(start) && move.end.equals(end)) {
+            if (move.start.equals(moveStart) && move.end.equals(end)) {
                 possibleMoves.add(move);
                 var promotion = move.promotionPieceType();
                 promotion.ifPresent(promotions::add);
@@ -97,16 +92,15 @@ public final class BoardController {
                 continue;
             }
             move.perform();
-            state = null;
-            var botState = BotTurn.perform(game);
-            if (botState.isTerminal()) {
+            state = BotTurn.perform(game);
+            if (state.isTerminal()) {
                 paintBoard(size, List.of());
-                if (botState.isCheckmate()) {
-                    var message = "You have won the game due to " + botState.terminalMessage();
+                if (state.isCheckmate()) {
+                    var message = "You have won the game due to " + state.terminalMessage();
                     var alert = new Alert(Alert.AlertType.NONE, message, ButtonType.OK);
                     alert.showAndWait();
-                } else if (botState.isTie()) {
-                    var message = "You have tied the game due to " + botState.terminalMessage();
+                } else if (state.isTie()) {
+                    var message = "You have tied the game due to " + state.terminalMessage();
                     var alert = new Alert(Alert.AlertType.NONE, message, ButtonType.OK);
                     alert.showAndWait();
                 }
@@ -125,11 +119,10 @@ public final class BoardController {
                     var alert = new Alert(Alert.AlertType.NONE, message, ButtonType.OK);
                     alert.showAndWait();
                 }
-                state = null;
                 return;
             }
         }
-        start = null;
+        moveStart = null;
         paintBoard(size, List.of());
     }
 
