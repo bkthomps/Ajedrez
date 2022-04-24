@@ -6,7 +6,7 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
-public class Application extends javafx.application.Application {
+public final class Application extends javafx.application.Application {
     @Override
     public void start(Stage stage) throws IOException {
         var loader = new FXMLLoader(getClass().getResource("settings-view.fxml"));

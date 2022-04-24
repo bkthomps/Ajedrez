@@ -3,6 +3,7 @@ package frontend;
 import backend.Game;
 import backend.Position;
 import backend.State;
+import bot.BotTurn;
 import javafx.fxml.FXML;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
@@ -15,7 +16,7 @@ import javafx.scene.shape.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BoardController {
+public final class BoardController {
     private static final int ROW_COUNT = 8;
     private static final int COLUMN_COUNT = 8;
 
@@ -37,6 +38,9 @@ public class BoardController {
         BoardController.player = player;
         BoardController.game = new Game("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         BoardController.state = BoardController.game.generateMoves();
+        if (BoardController.state.isTerminal()) {
+            // TODO: end game
+        }
         activePlayer = player.color;
         paintBoard(activePlayer, List.of());
         // TODO: only works for one player and start white at the moment
@@ -62,7 +66,6 @@ public class BoardController {
             }
             if (endPositions.isEmpty()) {
                 start = null;
-                return;
             }
             paintBoard(activePlayer, endPositions);
             return;
@@ -73,7 +76,16 @@ public class BoardController {
             if (move.start.equals(start) && move.end.equals(end)) {
                 move.perform();
                 state = null;
-                // TODO: bot move
+                var botState = BotTurn.perform(game);
+                if (botState.isTerminal()) {
+                    // TODO: end game
+                    return;
+                }
+                state = game.generateMoves();
+                if (state.isTerminal()) {
+                    // TODO: end game
+                    return;
+                }
             }
         }
         start = null;

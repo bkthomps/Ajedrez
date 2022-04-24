@@ -11,7 +11,7 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
-public class SettingsController {
+public final class SettingsController {
     private Color playerColor = Color.WHITE;
     private Players playerCount = Players.ONE_PLAYER;
 
