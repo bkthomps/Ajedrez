@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class BotTurn {
+    static final int ROW_COUNT = 8;
+    static final int COLUMN_COUNT = 8;
     private static final Map<Piece.Type, Integer> values = new HashMap<>();
 
     static {
