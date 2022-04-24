@@ -50,15 +50,8 @@ public final class BoardController {
             moveStart = getStartMovePosition(size, clickPosition);
             return;
         }
-        var possibleMoves = new ArrayList<Move>();
-        var promotions = new ArrayList<Piece.Type>();
-        for (var move : state.moves()) {
-            if (move.start.equals(moveStart) && move.end.equals(clickPosition)) {
-                possibleMoves.add(move);
-                var promotion = move.promotionPieceType();
-                promotion.ifPresent(promotions::add);
-            }
-        }
+        var possibleMoves = getPossibleMoves(moveStart, clickPosition);
+        var promotions = getPiecePromotions(possibleMoves);
         Piece.Type promoteTo = null;
         if (!promotions.isEmpty()) {
             var buttons = new ButtonType[promotions.size()];
@@ -132,6 +125,25 @@ public final class BoardController {
         }
         paintBoard(size, endPositions);
         return clickPosition;
+    }
+
+    private List<Move> getPossibleMoves(Position moveStart, Position clickPosition) {
+        var possibleMoves = new ArrayList<Move>();
+        for (var move : state.moves()) {
+            if (move.start.equals(moveStart) && move.end.equals(clickPosition)) {
+                possibleMoves.add(move);
+            }
+        }
+        return possibleMoves;
+    }
+
+    private List<Piece.Type> getPiecePromotions(List<Move> possibleMoves) {
+        var promotions = new ArrayList<Piece.Type>();
+        for (var move : possibleMoves) {
+            var promotion = move.promotionPieceType();
+            promotion.ifPresent(promotions::add);
+        }
+        return promotions;
     }
 
     private void paintBoard(SceneSize size, List<Position> endPositions) {
