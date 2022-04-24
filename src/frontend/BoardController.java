@@ -1,10 +1,10 @@
 package frontend;
 
-import backend.Game;
-import backend.Position;
-import backend.State;
+import backend.*;
 import bot.BotTurn;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
@@ -70,22 +70,52 @@ public final class BoardController {
             paintBoard(activePlayer, endPositions);
             return;
         }
+        var possibleMoves = new ArrayList<Move>();
+        var promotions = new ArrayList<Piece.Type>();
         var end = new Position(row, column);
         for (var move : state.moves()) {
             // TODO: can have more than 1 for promotions, check this
             if (move.start.equals(start) && move.end.equals(end)) {
-                move.perform();
-                state = null;
-                var botState = BotTurn.perform(game);
-                if (botState.isTerminal()) {
-                    // TODO: end game
-                    return;
+                possibleMoves.add(move);
+                var promotion = move.promotionPieceType();
+                promotion.ifPresent(promotions::add);
+            }
+        }
+        Piece.Type promoteTo = null;
+        if (!promotions.isEmpty()) {
+            var buttons = new ButtonType[promotions.size()];
+            for (int i = 0; i < buttons.length; i++) {
+                buttons[i] = new ButtonType(promotions.get(i).toString());
+            }
+            var alert = new Alert(Alert.AlertType.NONE, "What should this pawn be promoted to?", buttons);
+            var result = alert.showAndWait();
+            var button = result.orElse(buttons[0]);
+            for (int i = 0; i < buttons.length; i++) {
+                if (buttons[i].equals(button)) {
+                    promoteTo = promotions.get(i);
                 }
-                state = game.generateMoves();
-                if (state.isTerminal()) {
-                    // TODO: end game
-                    return;
-                }
+            }
+        }
+        for (var move : possibleMoves) {
+            var promotion = move.promotionPieceType();
+            if (promotion.isPresent() && promotion.get() != promoteTo) {
+                continue;
+            }
+            move.perform();
+            state = null;
+            var botState = BotTurn.perform(game);
+            if (botState.isTerminal()) {
+                // TODO: end game
+                return;
+            }
+            paintBoard(activePlayer, List.of());
+            if (player.count != Players.ONE_PLAYER) {
+                activePlayer = activePlayer.next();
+            }
+            state = game.generateMoves();
+            if (state.isTerminal()) {
+                // TODO: end game
+                return;
             }
         }
         start = null;
