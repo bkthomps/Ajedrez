@@ -38,6 +38,7 @@ public final class BoardController {
         game = new Game("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         displayWhite = (player.color == backend.Color.WHITE);
         players = player.count;
+        paintBoard(game, size);
         if (player.color == backend.Color.BLACK && player.count == Players.ONE_PLAYER) {
             state = BotTurn.perform(game);
             paintBoard(game, size);
@@ -47,7 +48,6 @@ public final class BoardController {
             }
         }
         state = game.generateMoves();
-        paintBoard(game, size);
         if (state.isTerminal()) {
             alertUserTerminatedGame(state, getTerminalMessage());
         }
