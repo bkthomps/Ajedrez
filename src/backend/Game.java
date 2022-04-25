@@ -8,10 +8,6 @@ public final class Game {
 
     private final Board board;
 
-    private Game() {
-        throw new IllegalStateException("Disable default constructor");
-    }
-
     public Game(String fen) {
         board = new Board(fen);
     }

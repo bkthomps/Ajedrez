@@ -16,10 +16,6 @@ public final class State {
     private final Type stateType;
     private final List<Move> moves;
 
-    private State() {
-        throw new IllegalStateException("Disable default constructor");
-    }
-
     State(Type stateType, List<Move> moves) {
         this.stateType = stateType;
         this.moves = moves;
