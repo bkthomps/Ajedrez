@@ -87,10 +87,10 @@ final class PieceSquareTables {
             new int[]{-50, -30, -30, -30, -30, -30, -30, -50},
     };
 
-    // TODO: king has to be evaluated last so we know if it's late game
-    static int evaluate(Piece piece, int row, int column, boolean isLateGame) {
+    static int evaluate(Piece[][] squares, int row, int column, boolean isLateGame) {
+        var piece = squares[row][column];
         if (piece.color != Color.WHITE) {
-            row = BotTurn.ROW_COUNT - 1 - row;
+            row = squares.length - 1 - row;
         }
         switch (piece.type) {
             case PAWN:

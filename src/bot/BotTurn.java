@@ -3,8 +3,6 @@ package bot;
 import backend.*;
 
 public final class BotTurn {
-    static final int ROW_COUNT = 8;
-    static final int COLUMN_COUNT = 8;
     private static final int PAWN_VALUE = 100;
     private static final int KNIGHT_VALUE = 320;
     private static final int BISHOP_VALUE = 330;
@@ -56,83 +54,56 @@ public final class BotTurn {
     }
 
     private static int evaluate(Piece[][] squares, boolean isWhite) {
-        int whiteQueenCount = 0;
-        int blackQueenCount = 0;
-        int whiteRookCount = 0;
-        int blackRookCount = 0;
-        int whitePiecesCount = 0;
-        int blackPiecesCount = 0;
-        Position whiteKing = null;
-        Position blackKing = null;
-        int value = 0;
-        for (int i = 0; i < BotTurn.ROW_COUNT; i++) {
-            for (int j = 0; j < BotTurn.COLUMN_COUNT; j++) {
+        var queenCount = new int[]{0, 0};
+        var rookCount = new int[]{0, 0};
+        var minorCount = new int[]{0, 0};
+        var kings = new Position[]{null, null};
+        int totalValue = 0;
+        for (int i = 0; i < squares.length; i++) {
+            for (int j = 0; j < squares[i].length; j++) {
                 var piece = squares[i][j];
                 if (piece == null) {
                     continue;
                 }
-                if (piece.color == Color.WHITE) {
-                    switch (piece.type) {
-                        case PAWN -> value += PAWN_VALUE;
-                        case KNIGHT -> {
-                            value += KNIGHT_VALUE;
-                            whitePiecesCount++;
-                        }
-                        case BISHOP -> {
-                            value += BISHOP_VALUE;
-                            whitePiecesCount++;
-                        }
-                        case ROOK -> {
-                            value += ROOK_VALUE;
-                            whiteRookCount++;
-                        }
-                        case QUEEN -> {
-                            value += QUEEN_VALUE;
-                            whiteQueenCount++;
-                        }
-                        case KING -> whiteKing = new Position(i, j);
+                int value = 0;
+                switch (piece.type) {
+                    case PAWN -> value += PAWN_VALUE;
+                    case KNIGHT -> {
+                        value += KNIGHT_VALUE;
+                        minorCount[piece.color.bitIndex()]++;
                     }
-                    if (piece.type != Piece.Type.KING) {
-                        value += PieceSquareTables.evaluate(squares[i][j], i, j, false);
+                    case BISHOP -> {
+                        value += BISHOP_VALUE;
+                        minorCount[piece.color.bitIndex()]++;
                     }
-                } else {
-                    switch (piece.type) {
-                        case PAWN -> value -= PAWN_VALUE;
-                        case KNIGHT -> {
-                            value -= KNIGHT_VALUE;
-                            blackPiecesCount++;
-                        }
-                        case BISHOP -> {
-                            value -= BISHOP_VALUE;
-                            blackPiecesCount++;
-                        }
-                        case ROOK -> {
-                            value -= ROOK_VALUE;
-                            blackRookCount++;
-                        }
-                        case QUEEN -> {
-                            value -= QUEEN_VALUE;
-                            blackQueenCount++;
-                        }
-                        case KING -> blackKing = new Position(i, j);
+                    case ROOK -> {
+                        value += ROOK_VALUE;
+                        rookCount[piece.color.bitIndex()]++;
                     }
-                    if (piece.type != Piece.Type.KING) {
-                        value -= PieceSquareTables.evaluate(squares[i][j], i, j, false);
+                    case QUEEN -> {
+                        value += QUEEN_VALUE;
+                        queenCount[piece.color.bitIndex()]++;
                     }
+                    case KING -> kings[piece.color.bitIndex()] = new Position(i, j);
                 }
+                if (piece.type != Piece.Type.KING) {
+                    value += PieceSquareTables.evaluate(squares, i, j, false);
+                }
+                int factor = (piece.color == Color.WHITE) ? 1 : -1;
+                totalValue += factor * value;
             }
         }
-        boolean isWhiteEndgame = whiteQueenCount == 0
-                || (whiteQueenCount == 1 && whiteRookCount == 0 && whitePiecesCount <= 1);
-        boolean isBlackEndgame = blackQueenCount == 0
-                || (blackQueenCount == 1 && blackRookCount == 0 && blackPiecesCount <= 1);
-        boolean isEndgame = isWhiteEndgame && isBlackEndgame;
-        value += PieceSquareTables.evaluate(
-                squares[whiteKing.row][whiteKing.column], whiteKing.row, whiteKing.column, isEndgame
-        );
-        value -= PieceSquareTables.evaluate(
-                squares[blackKing.row][blackKing.column], blackKing.row, blackKing.column, isEndgame
-        );
-        return isWhite ? value : -value;
+        if (kings[0] == null || kings[1] == null) {
+            throw new IllegalStateException("No king found");
+        }
+        boolean isLateGame = isLateGame(queenCount[0], rookCount[0], minorCount[0])
+                && isLateGame(queenCount[1], rookCount[1], minorCount[1]);
+        totalValue += PieceSquareTables.evaluate(squares, kings[0].row, kings[0].column, isLateGame);
+        totalValue -= PieceSquareTables.evaluate(squares, kings[1].row, kings[1].column, isLateGame);
+        return isWhite ? totalValue : -totalValue;
+    }
+
+    private static boolean isLateGame(int queenCount, int rookCount, int minorCount) {
+        return queenCount == 0 || (queenCount == 1 && rookCount == 0 && minorCount <= 1);
     }
 }

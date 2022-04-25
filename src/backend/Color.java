@@ -34,7 +34,7 @@ public enum Color {
         }
 
         @Override
-        int bitIndex() {
+        public int bitIndex() {
             return 0;
         }
     },
@@ -71,7 +71,7 @@ public enum Color {
         }
 
         @Override
-        int bitIndex() {
+        public int bitIndex() {
             return 1;
         }
     };
@@ -88,5 +88,5 @@ public enum Color {
 
     abstract int endRow();
 
-    abstract int bitIndex();
+    public abstract int bitIndex();
 }
