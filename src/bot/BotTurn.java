@@ -20,7 +20,7 @@ public final class BotTurn {
         int bestEvaluation = Integer.MIN_VALUE;
         var moves = state.moves();
         for (var move : moves) {
-            int moveEvaluation = -evaluate(game, move, !isBotWhite, 3);
+            int moveEvaluation = -evaluateSearch(game, move, !isBotWhite, 3, -Integer.MAX_VALUE, Integer.MAX_VALUE);
             if (moveEvaluation > bestEvaluation) {
                 bestEvaluation = moveEvaluation;
                 bestMove = move;
@@ -33,7 +33,7 @@ public final class BotTurn {
         return state;
     }
 
-    private static int evaluate(Game game, Move move, boolean isBotWhite, int depth) {
+    private static int evaluateSearch(Game game, Move move, boolean isBotWhite, int depth, int alpha, int beta) {
         if (depth == 0) {
             return evaluate(game.getBoard(), isBotWhite);
         }
@@ -41,15 +41,18 @@ public final class BotTurn {
         var state = game.generateMoves();
         if (state.isTerminal()) {
             move.undo();
-            return state.isCheckmate() ? Integer.MIN_VALUE : 0;
+            return state.isCheckmate() ? -Integer.MAX_VALUE : 0;
         }
-        int bestEvaluation = Integer.MIN_VALUE;
         for (var deeperMove : state.moves()) {
-            int evaluation = -evaluate(game, deeperMove, !isBotWhite, depth - 1);
-            bestEvaluation = Math.max(evaluation, bestEvaluation);
+            int evaluation = -evaluateSearch(game, deeperMove, !isBotWhite, depth - 1, -beta, -alpha);
+            if (evaluation >= beta) {
+                move.undo();
+                return beta;
+            }
+            alpha = Math.max(alpha, evaluation);
         }
         move.undo();
-        return bestEvaluation;
+        return alpha;
     }
 
     private static int evaluate(Piece[][] squares, boolean isWhite) {
