@@ -2,7 +2,29 @@ package bot;
 
 import backend.*;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
 public final class BotTurn {
+    private static final int MAX_WAIT_SECONDS = 3;
+    private static final long NANO_SECONDS_PER_SECOND = 1_000_000_000;
+    private static final long MAX_NANO_WAIT = MAX_WAIT_SECONDS * NANO_SECONDS_PER_SECOND;
+
+    private static final class MoveQuality {
+        private final Move move;
+        private int evaluation;
+
+        private MoveQuality(Move move) {
+            this.move = move;
+            this.evaluation = Integer.MIN_VALUE;
+        }
+
+        private int getEvaluation() {
+            return evaluation;
+        }
+    }
+
     private static final int PAWN_VALUE = 100;
     private static final int KNIGHT_VALUE = 320;
     private static final int BISHOP_VALUE = 330;
@@ -14,21 +36,34 @@ public final class BotTurn {
         if (state.isTerminal()) {
             return state;
         }
-        Move bestMove = null;
-        int bestEvaluation = Integer.MIN_VALUE;
         var moves = state.moves();
-        for (var move : moves) {
-            int moveEvaluation = -evaluateSearch(game, move, !isBotWhite, 3, -Integer.MAX_VALUE, Integer.MAX_VALUE);
-            if (moveEvaluation > bestEvaluation) {
-                bestEvaluation = moveEvaluation;
-                bestMove = move;
-            }
-        }
-        if (bestMove == null) {
-            throw new IllegalStateException("No best move found");
-        }
+        var bestMove = getBestMove(game, moves, isBotWhite);
         bestMove.perform();
         return state;
+    }
+
+    private static Move getBestMove(Game game, List<Move> rawMoves, boolean isBotWhite) {
+        var choices = new ArrayList<MoveQuality>();
+        for (var move : rawMoves) {
+            choices.add(new MoveQuality(move));
+        }
+        long start = System.nanoTime();
+        outer:
+        for (int depth = 0; ; depth++) {
+            for (int i = 0; i < choices.size(); i++) {
+                var choice = choices.get(i);
+                choice.evaluation = -evaluateSearch(
+                        game, choice.move, !isBotWhite, depth, -Integer.MAX_VALUE, Integer.MAX_VALUE
+                );
+                if (System.nanoTime() - start > MAX_NANO_WAIT) {
+                    System.out.println("Aborting depth " + depth + " after " + i * 100 / choices.size() + " percent");
+                    break outer;
+                }
+            }
+            choices.sort(Comparator.comparing(MoveQuality::getEvaluation).reversed());
+            System.out.println("Finished depth of " + depth);
+        }
+        return choices.get(0).move;
     }
 
     private static int evaluateSearch(Game game, Move move, boolean isBotWhite, int depth, int alpha, int beta) {
