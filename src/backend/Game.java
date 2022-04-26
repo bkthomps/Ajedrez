@@ -20,6 +20,10 @@ public final class Game {
         return squares;
     }
 
+    public long getZobristHash() {
+        return board.zobrist.getHash();
+    }
+
     public State generateMoves() {
         var user = board.activePlayer;
         board.activePlayer = user.previous();

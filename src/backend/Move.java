@@ -33,10 +33,12 @@ public abstract class Move {
             called = true;
         }
         board.activePlayer = board.activePlayer.next();
+        board.zobrist.togglePlayer();
         oldCanCastleShort = (BitSet) board.shortCastleRights.clone();
         oldCanCastleLong = (BitSet) board.longCastleRights.clone();
         oldEnPassantTarget = board.enPassantTarget;
         board.enPassantTarget = null;
+        board.zobrist.toggleEnPassant(oldEnPassantTarget);
         return false;
     }
 
@@ -45,6 +47,11 @@ public abstract class Move {
             throw new IllegalStateException("Cannot undo a move that has not been made");
         }
         board.activePlayer = board.activePlayer.previous();
+        board.zobrist.resetShort(board.shortCastleRights, oldCanCastleShort);
+        board.zobrist.resetLong(board.longCastleRights, oldCanCastleLong);
+        board.zobrist.togglePlayer();
+        board.zobrist.toggleEnPassant(board.enPassantTarget);
+        board.zobrist.toggleEnPassant(oldEnPassantTarget);
         board.enPassantTarget = oldEnPassantTarget;
         board.shortCastleRights = oldCanCastleShort;
         board.longCastleRights = oldCanCastleLong;
@@ -63,8 +70,10 @@ public abstract class Move {
             return;
         }
         if (position.column == Board.COLUMN_COUNT - 1) {
+            board.zobrist.clearShort(color, board.shortCastleRights);
             board.shortCastleRights.clear(color.bitIndex());
         } else if (position.column == 0) {
+            board.zobrist.clearLong(color, board.longCastleRights);
             board.longCastleRights.clear(color.bitIndex());
         }
     }
@@ -98,6 +107,8 @@ final class Castling extends Move {
         if (state == State.NOT_STARTED) {
             var player = board.activePlayer;
             super.partial();
+            board.zobrist.clearShort(player, board.shortCastleRights);
+            board.zobrist.clearLong(player, board.longCastleRights);
             board.shortCastleRights.clear(player.bitIndex());
             board.longCastleRights.clear(player.bitIndex());
             state = State.IN_PROGRESS;
@@ -107,13 +118,17 @@ final class Castling extends Move {
         if (state == State.IN_PROGRESS) {
             int direction = Integer.signum(end.column - start.column);
             int nextKingColumn = currentKingColumn + direction;
+            board.zobrist.togglePiece(board.squares, start.row, currentKingColumn);
             board.squares[end.row][nextKingColumn] = board.squares[start.row][currentKingColumn];
+            board.zobrist.togglePiece(board.squares, end.row, nextKingColumn);
             board.squares[start.row][currentKingColumn] = null;
             if (nextKingColumn != end.column) {
                 currentKingColumn = nextKingColumn;
                 return true;
             }
+            board.zobrist.togglePiece(board.squares, rookStart.row, rookStart.column);
             board.squares[rookEnd.row][rookEnd.column] = board.squares[rookStart.row][rookStart.column];
+            board.zobrist.togglePiece(board.squares, rookEnd.row, rookEnd.column);
             board.squares[rookStart.row][rookStart.column] = null;
             state = State.DONE;
             return false;
@@ -128,9 +143,13 @@ final class Castling extends Move {
         }
         super.undo();
         state = State.NOT_STARTED;
+        board.zobrist.togglePiece(board.squares, end.row, end.column);
         board.squares[start.row][start.column] = board.squares[end.row][end.column];
+        board.zobrist.togglePiece(board.squares, start.row, start.column);
         board.squares[end.row][end.column] = null;
+        board.zobrist.togglePiece(board.squares, rookEnd.row, rookEnd.column);
         board.squares[rookStart.row][rookStart.column] = board.squares[rookEnd.row][rookEnd.column];
+        board.zobrist.togglePiece(board.squares, rookStart.row, rookStart.column);
         board.squares[rookEnd.row][rookEnd.column] = null;
     }
 }
@@ -155,8 +174,11 @@ final class PawnPromotion extends Move {
         super.partial();
         updateCastlingRights(end);
         captured = board.squares[end.row][end.column];
+        board.zobrist.togglePiece(board.squares, end.row, end.column);
         board.squares[end.row][end.column] = promotion;
+        board.zobrist.togglePiece(board.squares, end.row, end.column);
         original = board.squares[start.row][start.column];
+        board.zobrist.togglePiece(board.squares, start.row, start.column);
         board.squares[start.row][start.column] = null;
         return false;
     }
@@ -165,7 +187,10 @@ final class PawnPromotion extends Move {
     public void undo() {
         super.undo();
         board.squares[start.row][start.column] = original;
+        board.zobrist.togglePiece(board.squares, start.row, start.column);
+        board.zobrist.togglePiece(board.squares, end.row, end.column);
         board.squares[end.row][end.column] = captured;
+        board.zobrist.togglePiece(board.squares, end.row, end.column);
     }
 }
 
@@ -186,9 +211,12 @@ final class EnPassant extends Move {
     @Override
     boolean partial() {
         super.partial();
+        board.zobrist.togglePiece(board.squares, start.row, start.column);
         board.squares[end.row][end.column] = board.squares[start.row][start.column];
+        board.zobrist.togglePiece(board.squares, end.row, end.column);
         board.squares[start.row][start.column] = null;
         captured = board.squares[pawnCapture.row][pawnCapture.column];
+        board.zobrist.togglePiece(board.squares, pawnCapture.row, pawnCapture.column);
         board.squares[pawnCapture.row][pawnCapture.column] = null;
         return false;
     }
@@ -196,9 +224,12 @@ final class EnPassant extends Move {
     @Override
     public void undo() {
         super.undo();
+        board.zobrist.togglePiece(board.squares, end.row, end.column);
         board.squares[start.row][start.column] = board.squares[end.row][end.column];
+        board.zobrist.togglePiece(board.squares, start.row, start.column);
         board.squares[end.row][end.column] = null;
         board.squares[pawnCapture.row][pawnCapture.column] = captured;
+        board.zobrist.togglePiece(board.squares, pawnCapture.row, pawnCapture.column);
     }
 }
 
@@ -220,7 +251,10 @@ class RegularMove extends Move {
         updateCastlingRights(start);
         updateCastlingRights(end);
         captured = board.squares[end.row][end.column];
+        board.zobrist.togglePiece(board.squares, end.row, end.column);
+        board.zobrist.togglePiece(board.squares, start.row, start.column);
         board.squares[end.row][end.column] = board.squares[start.row][start.column];
+        board.zobrist.togglePiece(board.squares, end.row, end.column);
         board.squares[start.row][start.column] = null;
         return false;
     }
@@ -228,8 +262,11 @@ class RegularMove extends Move {
     @Override
     public void undo() {
         super.undo();
+        board.zobrist.togglePiece(board.squares, end.row, end.column);
         board.squares[start.row][start.column] = board.squares[end.row][end.column];
+        board.zobrist.togglePiece(board.squares, start.row, start.column);
         board.squares[end.row][end.column] = captured;
+        board.zobrist.togglePiece(board.squares, end.row, end.column);
     }
 }
 
@@ -245,6 +282,7 @@ final class PawnJump extends RegularMove {
     boolean partial() {
         super.partial();
         board.enPassantTarget = jumpingOver;
+        board.zobrist.toggleEnPassant(board.enPassantTarget);
         return false;
     }
 
@@ -261,10 +299,12 @@ final class KingMove extends RegularMove {
 
     @Override
     boolean partial() {
-        var activePlayer = board.activePlayer;
+        var player = board.activePlayer;
         super.partial();
-        board.shortCastleRights.clear(activePlayer.bitIndex());
-        board.longCastleRights.clear(activePlayer.bitIndex());
+        board.zobrist.clearShort(player, board.shortCastleRights);
+        board.zobrist.clearLong(player, board.longCastleRights);
+        board.shortCastleRights.clear(player.bitIndex());
+        board.longCastleRights.clear(player.bitIndex());
         return false;
     }
 

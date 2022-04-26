@@ -116,9 +116,11 @@ public class RecursiveDepthTest {
             }
             var moves = new ArrayList<Move>();
             for (var move : state.moves()) {
+                long zobristHash = game.getZobristHash();
                 move.perform();
                 moves.addAll(getMoves(game, game.generateMoves(), depth - 1));
                 move.undo();
+                assertEquals(zobristHash, game.getZobristHash());
             }
             return moves;
         }

@@ -4,7 +4,9 @@ import backend.*;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public final class BotTurn {
     private static final int MAX_WAIT_SECONDS = 3;
@@ -50,10 +52,11 @@ public final class BotTurn {
         long start = System.nanoTime();
         outer:
         for (int depth = 0; ; depth++) {
+            var tabulation = new HashMap<Long, Integer>();
             for (int i = 0; i < choices.size(); i++) {
                 var choice = choices.get(i);
                 choice.evaluation = -evaluateSearch(
-                        game, choice.move, !isBotWhite, depth, -Integer.MAX_VALUE, Integer.MAX_VALUE
+                        game, tabulation, choice.move, !isBotWhite, depth, -Integer.MAX_VALUE, Integer.MAX_VALUE
                 );
                 if (System.nanoTime() - start > MAX_NANO_WAIT) {
                     System.out.println("Aborting depth " + depth + " after " + i * 100 / choices.size() + " percent");
@@ -66,9 +69,16 @@ public final class BotTurn {
         return choices.get(0).move;
     }
 
-    private static int evaluateSearch(Game game, Move move, boolean isBotWhite, int depth, int alpha, int beta) {
+    private static int evaluateSearch(Game game, Map<Long, Integer> tabulation, Move move,
+                                      boolean isBotWhite, int depth, int alpha, int beta) {
+        long zobristHash = game.getZobristHash();
+        if (tabulation.containsKey(zobristHash)) {
+            return tabulation.get(zobristHash);
+        }
         if (depth == 0) {
-            return evaluate(game.getBoard(), isBotWhite);
+            int value = evaluate(game.getBoard(), isBotWhite);
+            tabulation.put(zobristHash, value);
+            return value;
         }
         move.perform();
         var state = game.generateMoves();
@@ -77,7 +87,7 @@ public final class BotTurn {
             return state.isCheckmate() ? -Integer.MAX_VALUE : 0;
         }
         for (var deeperMove : state.moves()) {
-            int evaluation = -evaluateSearch(game, deeperMove, !isBotWhite, depth - 1, -beta, -alpha);
+            int evaluation = -evaluateSearch(game, tabulation, deeperMove, !isBotWhite, depth - 1, -beta, -alpha);
             if (evaluation >= beta) {
                 move.undo();
                 return beta;

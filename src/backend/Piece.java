@@ -227,4 +227,16 @@ public final class Piece {
         this.type = type;
         this.color = color;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof Piece that
+                && type == that.type
+                && color == that.color;
+    }
+
+    @Override
+    public int hashCode() {
+        return type.ordinal() * (color.ordinal() + 1);
+    }
 }

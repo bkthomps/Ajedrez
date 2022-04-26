@@ -15,6 +15,7 @@ final class Board {
     BitSet longCastleRights = new BitSet();
     Position enPassantTarget;
     Color activePlayer;
+    Zobrist zobrist;
 
     Board(String fen) {
         var elements = fen.split(" ");
@@ -32,6 +33,7 @@ final class Board {
         }
         validateKing();
         validateCastling();
+        zobrist = new Zobrist(activePlayer, squares, shortCastleRights, longCastleRights, enPassantTarget);
     }
 
     private void setBoard(String positions) {
