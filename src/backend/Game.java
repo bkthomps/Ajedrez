@@ -36,6 +36,15 @@ public final class Game {
             var terminalState = isKingChecked ? State.Type.CHECKMATE : State.Type.STALEMATE;
             return new State(terminalState, legalMoves);
         }
+        if (isTooManyMoves()) {
+            return new State(State.Type.DRAW_FIFTY_MOVE_RULE, List.of());
+        }
+        if (isInsufficientMaterial()) {
+            return new State(State.Type.DRAW_INSUFFICIENT_MATING, List.of());
+        }
+        if (isTooManyRepetitions()) {
+            return new State(State.Type.DRAW_THREEFOLD_REPETITION, List.of());
+        }
         var regularState = isKingChecked ? State.Type.CHECK : State.Type.NORMAL;
         return new State(regularState, legalMoves);
     }
@@ -87,6 +96,25 @@ public final class Game {
             }
         }
         return moves;
+    }
+
+    private boolean isTooManyMoves() {
+        for (var entry : board.plyCount.entrySet()) {
+            if (entry.getValue() < FIFTY_MOVE_RULE_PLY_COUNT) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isInsufficientMaterial() {
+        // TODO: long king against: lone King, or King and Knight, or King and Bishop, or King and two Knights
+        return false;
+    }
+
+    private boolean isTooManyRepetitions() {
+        // TODO: the board repeats 3 times
+        return false;
     }
 
     private boolean isKingChecked(Color user) {
