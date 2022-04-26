@@ -80,7 +80,7 @@ public final class BotTurn {
         if (tabulation.containsKey(zobristHash)) {
             return tabulation.get(zobristHash);
         }
-        if (depth == 0) {
+        if (depth <= 0 && !move.hasCapture()) {
             int value = evaluate(game.getBoard(), isBotWhite);
             tabulation.put(zobristHash, value);
             return value;
