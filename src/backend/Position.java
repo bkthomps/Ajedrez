@@ -10,6 +10,11 @@ public final class Position {
     }
 
     @Override
+    public String toString() {
+        return (char) (column + 'a') + "" + (row + 1);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         return obj instanceof Position that
                 && row == that.row

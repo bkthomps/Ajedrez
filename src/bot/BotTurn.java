@@ -25,6 +25,11 @@ public final class BotTurn {
         private int getEvaluation() {
             return evaluation;
         }
+
+        @Override
+        public String toString() {
+            return move + " = " + evaluation;
+        }
     }
 
     private static final int PAWN_VALUE = 100;
@@ -81,7 +86,7 @@ public final class BotTurn {
             return value;
         }
         if (System.nanoTime() - startTime > MAX_NANO_WAIT) {
-            return -Integer.MAX_VALUE;
+            return 0;
         }
         move.perform();
         var state = game.generateMoves();

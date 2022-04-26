@@ -21,6 +21,12 @@ public abstract class Move {
         this.end = end;
     }
 
+    @Override
+    public String toString() {
+        var piece = board.squares[start.row][start.column];
+        return piece.color + " " + piece.type + " " + start + " -> " + end;
+    }
+
     public abstract Optional<Piece.Type> promotionPieceType();
 
     public void perform() {
