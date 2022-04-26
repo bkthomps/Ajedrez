@@ -57,11 +57,12 @@ public final class BotTurn {
         long start = System.nanoTime();
         outer:
         for (int depth = 0; ; depth++) {
-            var tabulation = new HashMap<Long, Integer>();
+            var transpositions = new HashMap<Long, Integer>();
             for (int i = 0; i < choices.size(); i++) {
                 var choice = choices.get(i);
                 choice.evaluation = -evaluateSearch(
-                        game, tabulation, choice.move, start, !isBotWhite, depth, -Integer.MAX_VALUE, Integer.MAX_VALUE
+                        game, transpositions, choice.move, start,
+                        !isBotWhite, depth, -Integer.MAX_VALUE, Integer.MAX_VALUE
                 );
                 if (System.nanoTime() - start > MAX_NANO_WAIT) {
                     System.out.println("Aborting depth " + depth + " after " + i * 100 / choices.size() + " percent");
@@ -74,15 +75,15 @@ public final class BotTurn {
         return choices.get(0).move;
     }
 
-    private static int evaluateSearch(Game game, Map<Long, Integer> tabulation, Move move, long startTime,
+    private static int evaluateSearch(Game game, Map<Long, Integer> transpositions, Move move, long startTime,
                                       boolean isBotWhite, int depth, int alpha, int beta) {
         long zobristHash = game.getZobristHash();
-        if (tabulation.containsKey(zobristHash)) {
-            return tabulation.get(zobristHash);
+        if (transpositions.containsKey(zobristHash)) {
+            return transpositions.get(zobristHash);
         }
         if (depth <= 0 && !move.hasCapture()) {
             int value = evaluate(game.getBoard(), isBotWhite);
-            tabulation.put(zobristHash, value);
+            transpositions.put(zobristHash, value);
             return value;
         }
         if (System.nanoTime() - startTime > MAX_NANO_WAIT) {
@@ -96,7 +97,7 @@ public final class BotTurn {
         }
         for (var deeperMove : state.moves()) {
             int evaluation = -evaluateSearch(
-                    game, tabulation, deeperMove, startTime, !isBotWhite, depth - 1, -beta, -alpha
+                    game, transpositions, deeperMove, startTime, !isBotWhite, depth - 1, -beta, -alpha
             );
             if (evaluation >= beta) {
                 move.undo();
