@@ -56,7 +56,7 @@ public final class BotTurn {
             for (int i = 0; i < choices.size(); i++) {
                 var choice = choices.get(i);
                 choice.evaluation = -evaluateSearch(
-                        game, tabulation, choice.move, !isBotWhite, depth, -Integer.MAX_VALUE, Integer.MAX_VALUE
+                        game, tabulation, choice.move, start, !isBotWhite, depth, -Integer.MAX_VALUE, Integer.MAX_VALUE
                 );
                 if (System.nanoTime() - start > MAX_NANO_WAIT) {
                     System.out.println("Aborting depth " + depth + " after " + i * 100 / choices.size() + " percent");
@@ -69,7 +69,7 @@ public final class BotTurn {
         return choices.get(0).move;
     }
 
-    private static int evaluateSearch(Game game, Map<Long, Integer> tabulation, Move move,
+    private static int evaluateSearch(Game game, Map<Long, Integer> tabulation, Move move, long startTime,
                                       boolean isBotWhite, int depth, int alpha, int beta) {
         long zobristHash = game.getZobristHash();
         if (tabulation.containsKey(zobristHash)) {
@@ -80,6 +80,9 @@ public final class BotTurn {
             tabulation.put(zobristHash, value);
             return value;
         }
+        if (System.nanoTime() - startTime > MAX_NANO_WAIT) {
+            return -Integer.MAX_VALUE;
+        }
         move.perform();
         var state = game.generateMoves();
         if (state.isTerminal()) {
@@ -87,7 +90,9 @@ public final class BotTurn {
             return state.isCheckmate() ? -Integer.MAX_VALUE : 0;
         }
         for (var deeperMove : state.moves()) {
-            int evaluation = -evaluateSearch(game, tabulation, deeperMove, !isBotWhite, depth - 1, -beta, -alpha);
+            int evaluation = -evaluateSearch(
+                    game, tabulation, deeperMove, startTime, !isBotWhite, depth - 1, -beta, -alpha
+            );
             if (evaluation >= beta) {
                 move.undo();
                 return beta;
