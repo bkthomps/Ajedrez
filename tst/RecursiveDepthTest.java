@@ -133,7 +133,6 @@ public class RecursiveDepthTest {
         Generate.moves(fen).depth(2).count(400).promotions(0).castles(0).enPassant(0).assertAll();
         Generate.moves(fen).depth(3).count(8_902).promotions(0).castles(0).enPassant(0).assertAll();
         Generate.moves(fen).depth(4).count(197_281).promotions(0).castles(0).enPassant(0).assertAll();
-        Generate.moves(fen).depth(5).count(4_865_609).promotions(0).castles(0).enPassant(258).assertAll();
     }
 
     @Test
@@ -142,7 +141,6 @@ public class RecursiveDepthTest {
         Generate.moves(fen).depth(1).count(48).promotions(0).castles(2).enPassant(0).assertAll();
         Generate.moves(fen).depth(2).count(2_039).promotions(0).castles(91).enPassant(1).assertAll();
         Generate.moves(fen).depth(3).count(97_862).promotions(0).castles(3_162).enPassant(45).assertAll();
-        Generate.moves(fen).depth(4).count(4_085_603).promotions(15_172).castles(128_013).enPassant(1_929).assertAll();
     }
 
     @Test
@@ -152,8 +150,6 @@ public class RecursiveDepthTest {
         Generate.moves(fen).depth(2).count(191).promotions(0).castles(0).enPassant(0).assertAll();
         Generate.moves(fen).depth(3).count(2_812).promotions(0).castles(0).enPassant(2).assertAll();
         Generate.moves(fen).depth(4).count(43_238).promotions(0).castles(0).enPassant(123).assertAll();
-        Generate.moves(fen).depth(5).count(674_624).promotions(0).castles(0).enPassant(1_165).assertAll();
-        Generate.moves(fen).depth(6).count(11_030_083).promotions(7_552).castles(0).enPassant(33_325).assertAll();
     }
 
     @Test
@@ -189,6 +185,5 @@ public class RecursiveDepthTest {
         Generate.moves(fen).depth(1).assertCount(46);
         Generate.moves(fen).depth(2).assertCount(2_079);
         Generate.moves(fen).depth(3).assertCount(89_890);
-        Generate.moves(fen).depth(4).assertCount(3_894_594);
     }
 }
