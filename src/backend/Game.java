@@ -1,11 +1,10 @@
 package backend;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public final class Game {
-    private final int THREEFOLD_REPETITION_COUNT = 3;
+    private static final int THREEFOLD_REPETITION_COUNT = 3;
     static final int FIFTY_MOVE_RULE_PLY_COUNT = 2 * 50;
 
     private final Board board;
