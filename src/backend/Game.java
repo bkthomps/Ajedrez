@@ -1,6 +1,7 @@
 package backend;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public final class Game {
@@ -99,15 +100,55 @@ public final class Game {
         return moves;
     }
 
+    /**
+     * A draw due to too many moves occurs if both sides have moved 50 times each without pawn moves or piece captures.
+     *
+     * @return if the game is a draw due to insufficient mating material
+     */
     private boolean isTooManyMoves() {
         return board.halfMoveClock >= FIFTY_MOVE_RULE_PLY_COUNT;
     }
 
+    /**
+     * A draw due to insufficient mating material occurs when there is a lone king against:
+     * 1. a lone king, or
+     * 2. a king and a bishop, or
+     * 3. a king and a knight, or
+     * 4. a king and two knights
+     *
+     * @return if the game is a draw due to insufficient mating material
+     */
     private boolean isInsufficientMaterial() {
-        // TODO: long king against: lone King, or King and Knight, or King and Bishop, or King and two Knights
-        return false;
+        boolean hasBishop = false;
+        Color knightColor = null;
+        int knightCount = 0;
+        for (var line : board.squares) {
+            for (var piece : line) {
+                if (piece == null || piece.type == Piece.Type.KING) {
+                    continue;
+                }
+                if (piece.type == Piece.Type.BISHOP && !hasBishop && knightCount == 0) {
+                    hasBishop = true;
+                    continue;
+                }
+                if (piece.type == Piece.Type.KNIGHT && !hasBishop && knightCount < 2
+                        && (knightColor == null || knightColor == piece.color)) {
+                    knightCount++;
+                    knightColor = piece.color;
+                    continue;
+                }
+                return false;
+            }
+        }
+        return true;
     }
 
+    /**
+     * A draw due to too many board repetitions occurs when the board repeats three times, the same player is to move,
+     * and the same moves are present (ie: en passant possibility and castling rights).
+     *
+     * @return if the game is a draw due to too many repetitions
+     */
     private boolean isTooManyRepetitions() {
         return board.repetitions.getOrDefault(board.zobrist.getHash(), 0) >= THREEFOLD_REPETITION_COUNT;
     }
