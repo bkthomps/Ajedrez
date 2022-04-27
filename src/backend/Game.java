@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class Game {
+    private final int THREEFOLD_REPETITION_COUNT = 3;
     static final int FIFTY_MOVE_RULE_PLY_COUNT = 2 * 50;
 
     private final Board board;
@@ -108,8 +109,7 @@ public final class Game {
     }
 
     private boolean isTooManyRepetitions() {
-        // TODO: the board repeats 3 times
-        return false;
+        return board.repetitions.getOrDefault(board.zobrist.getHash(), 0) >= THREEFOLD_REPETITION_COUNT;
     }
 
     private boolean isKingChecked(Color user) {

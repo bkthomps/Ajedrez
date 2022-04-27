@@ -10,6 +10,7 @@ final class Board {
     static final int COLUMN_COUNT = 8;
 
     final Piece[][] squares = new Piece[ROW_COUNT][COLUMN_COUNT];
+    final Map<Long, Integer> repetitions = new HashMap<>();
     BitSet shortCastleRights = new BitSet();
     BitSet longCastleRights = new BitSet();
     Position enPassantTarget;
@@ -32,6 +33,7 @@ final class Board {
         validateKing();
         validateCastling();
         zobrist = new Zobrist(activePlayer, squares, shortCastleRights, longCastleRights, enPassantTarget);
+        repetitions.put(zobrist.getHash(), 1);
     }
 
     private void setBoard(String positions) {
