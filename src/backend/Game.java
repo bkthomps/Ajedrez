@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class Game {
-    static final int FIFTY_MOVE_RULE_PLY_COUNT = 50;
+    static final int FIFTY_MOVE_RULE_PLY_COUNT = 2 * 50;
 
     private final Board board;
 
@@ -99,12 +99,7 @@ public final class Game {
     }
 
     private boolean isTooManyMoves() {
-        for (var entry : board.plyCount.entrySet()) {
-            if (entry.getValue() < FIFTY_MOVE_RULE_PLY_COUNT) {
-                return false;
-            }
-        }
-        return true;
+        return board.halfMoveClock >= FIFTY_MOVE_RULE_PLY_COUNT;
     }
 
     private boolean isInsufficientMaterial() {

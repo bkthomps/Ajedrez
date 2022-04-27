@@ -13,7 +13,7 @@ public abstract class Move {
     private BitSet oldCanCastleShort;
     private BitSet oldCanCastleLong;
     private boolean called;
-    private int oldPlyCount;
+    private int oldHalfMoveClock;
 
     Move(Board board, Position start, Position end) {
         this.board = board;
@@ -41,8 +41,8 @@ public abstract class Move {
         if (!called) {
             called = true;
         }
-        oldPlyCount = board.plyCount.get(board.activePlayer);
-        board.plyCount.put(board.activePlayer, oldPlyCount + 1);
+        oldHalfMoveClock = board.halfMoveClock;
+        board.halfMoveClock++;
         board.activePlayer = board.activePlayer.next();
         board.zobrist.togglePlayer();
         oldCanCastleShort = (BitSet) board.shortCastleRights.clone();
@@ -57,8 +57,8 @@ public abstract class Move {
         if (!called) {
             throw new IllegalStateException("Cannot undo a move that has not been made");
         }
+        board.halfMoveClock = oldHalfMoveClock;
         board.activePlayer = board.activePlayer.previous();
-        board.plyCount.put(board.activePlayer, oldPlyCount);
         board.zobrist.resetShort(board.shortCastleRights, oldCanCastleShort);
         board.zobrist.resetLong(board.longCastleRights, oldCanCastleLong);
         board.zobrist.togglePlayer();
@@ -193,9 +193,8 @@ final class PawnPromotion extends Move {
 
     @Override
     boolean partial() {
-        var player = board.activePlayer;
         super.partial();
-        board.plyCount.put(player, 0);
+        board.halfMoveClock = 0;
         updateCastlingRights(end);
         captured = board.squares[end.row][end.column];
         board.zobrist.togglePiece(board.squares, end.row, end.column);
@@ -239,9 +238,8 @@ final class EnPassant extends Move {
 
     @Override
     boolean partial() {
-        var player = board.activePlayer;
         super.partial();
-        board.plyCount.put(player, 0);
+        board.halfMoveClock = 0;
         board.zobrist.togglePiece(board.squares, start.row, start.column);
         board.squares[end.row][end.column] = board.squares[start.row][start.column];
         board.zobrist.togglePiece(board.squares, end.row, end.column);
@@ -289,7 +287,7 @@ class RegularMove extends Move {
         updateCastlingRights(end);
         captured = board.squares[end.row][end.column];
         if (captured != null) {
-            board.plyCount.put(player, 0);
+            board.halfMoveClock = 0;
         }
         board.zobrist.togglePiece(board.squares, end.row, end.column);
         board.zobrist.togglePiece(board.squares, start.row, start.column);
@@ -320,9 +318,8 @@ final class PawnJump extends RegularMove {
 
     @Override
     boolean partial() {
-        var player = board.activePlayer;
         super.partial();
-        board.plyCount.put(player, 0);
+        board.halfMoveClock = 0;
         board.enPassantTarget = jumpingOver;
         board.zobrist.toggleEnPassant(board.enPassantTarget);
         return false;

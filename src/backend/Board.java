@@ -10,12 +10,12 @@ final class Board {
     static final int COLUMN_COUNT = 8;
 
     final Piece[][] squares = new Piece[ROW_COUNT][COLUMN_COUNT];
-    final Map<Color, Integer> plyCount = new HashMap<>();
     BitSet shortCastleRights = new BitSet();
     BitSet longCastleRights = new BitSet();
     Position enPassantTarget;
     Color activePlayer;
     Zobrist zobrist;
+    int halfMoveClock;
 
     Board(String fen) {
         var elements = fen.split(" ");
@@ -27,9 +27,7 @@ final class Board {
         setCastlingRights(elements[2]);
         setEnPassantTarget(elements[3]);
         if (elements.length == 6) {
-            setPlies(elements[4], elements[5]);
-        } else {
-            setPlies("0", "0");
+            setPlies(elements[4]);
         }
         validateKing();
         validateCastling();
@@ -121,21 +119,17 @@ final class Board {
         enPassantTarget = new Position(row, column);
     }
 
-    private void setPlies(String whitePlies, String blackPlies) {
+    private void setPlies(String halfMoves) {
         try {
-            int whitePlyCount = Integer.parseInt(whitePlies);
-            int blackPlyCount = Integer.parseInt(blackPlies);
-            if (whitePlyCount < 0 || blackPlyCount < 0) {
-                throw new IllegalArgumentException("The fen string is malformed: ply count less than zero");
+            halfMoveClock = Integer.parseInt(halfMoves);
+            if (halfMoveClock < 0) {
+                throw new IllegalArgumentException("The fen string is malformed: half move clock is negative");
             }
-            int maxPlyCount = Game.FIFTY_MOVE_RULE_PLY_COUNT;
-            if (whitePlyCount > maxPlyCount && blackPlyCount > maxPlyCount) {
+            if (halfMoveClock > Game.FIFTY_MOVE_RULE_PLY_COUNT) {
                 throw new IllegalArgumentException("The fen string is malformed: more plies than 50 move rule allows");
             }
-            plyCount.put(Color.WHITE, whitePlyCount);
-            plyCount.put(Color.BLACK, blackPlyCount);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("The fen string is malformed: invalid ply count format");
+            throw new IllegalArgumentException("The fen string is malformed: invalid half move clock");
         }
     }
 
