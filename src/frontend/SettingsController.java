@@ -47,7 +47,7 @@ public final class SettingsController {
 
     @FXML
     private void onStartGame(ActionEvent event) throws IOException {
-        var loader = new FXMLLoader(getClass().getResource("board-view.fxml"));
+        var loader = new FXMLLoader(getClass().getResource("/fxml/board-view.fxml"));
         var scene = new Scene(loader.load());
         var window = (Stage) ((Node) event.getSource()).getScene().getWindow();
         window.setScene(scene);

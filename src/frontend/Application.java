@@ -10,7 +10,7 @@ import java.io.IOException;
 public final class Application extends javafx.application.Application {
     @Override
     public void start(Stage stage) throws IOException {
-        var loader = new FXMLLoader(getClass().getResource("settings-view.fxml"));
+        var loader = new FXMLLoader(getClass().getResource("/fxml/settings-view.fxml"));
         var scene = new Scene(loader.load());
         stage.setTitle("Ajedrez");
         stage.getIcons().add(new Image("BLACK_KING.png"));

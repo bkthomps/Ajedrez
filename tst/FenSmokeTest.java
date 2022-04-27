@@ -7,7 +7,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class FenSmokeTest {
+public class FenSmokeTest {
     private static int moveCount(String fen) {
         return new Game(fen).generateMoves().moves().size();
     }
