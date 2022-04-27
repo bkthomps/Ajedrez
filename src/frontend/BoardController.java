@@ -12,6 +12,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
@@ -27,6 +29,8 @@ public final class BoardController {
     private static final Color LIGHT_SQUARE = Color.rgb(200, 100, 0);
     private static final Color DARK_HIGHLIGHTED = Color.rgb(180, 160, 140);
     private static final Color LIGHT_HIGHLIGHTED = Color.rgb(200, 160, 140);
+    private static final Media moveSound = new Media(BoardController.class.getResource("/move.wav").toString());
+    private static final Media errorSound = new Media(BoardController.class.getResource("/error.wav").toString());
 
     private final Semaphore semaphore = new Semaphore(1);
     private Game game;
@@ -71,6 +75,7 @@ public final class BoardController {
     private void onMouseClicked(MouseEvent event) {
         boolean hadPermit = semaphore.tryAcquire();
         if (!hadPermit) {
+            playSound(errorSound);
             return;
         }
         var scene = ((Node) event.getSource()).getScene();
@@ -112,6 +117,7 @@ public final class BoardController {
         }
         var move = getSelectedMove(possibleMoves, promoteTo);
         move.perform();
+        playSound(moveSound);
         if (players == Players.TWO_PLAYERS) {
             displayWhite = !displayWhite;
         }
@@ -131,6 +137,7 @@ public final class BoardController {
             @Override
             protected Void call() {
                 state = BotTurn.perform(game, !displayWhite);
+                playSound(moveSound);
                 return null;
             }
         };
@@ -224,6 +231,11 @@ public final class BoardController {
         }
         var alert = new Alert(Alert.AlertType.NONE, message, ButtonType.OK);
         alert.showAndWait();
+    }
+
+    private void playSound(Media sound) {
+        var mediaPlayer = new MediaPlayer(sound);
+        mediaPlayer.play();
     }
 
     private void paintBoard(Game game, SceneSize size) {
