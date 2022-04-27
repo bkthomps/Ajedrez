@@ -2,6 +2,7 @@ package frontend;
 
 import backend.*;
 import bot.BotTurn;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -17,6 +18,7 @@ import javafx.scene.shape.Rectangle;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 public final class BoardController {
     static final int ROW_COUNT = 8;
@@ -26,6 +28,7 @@ public final class BoardController {
     private static final Color DARK_HIGHLIGHTED = Color.rgb(180, 160, 140);
     private static final Color LIGHT_HIGHLIGHTED = Color.rgb(200, 160, 140);
 
+    private final Semaphore semaphore = new Semaphore(1);
     private Game game;
     private State state;
     private Position moveStart;
@@ -35,7 +38,7 @@ public final class BoardController {
     @FXML
     private GridPane board;
 
-    void setPlayerData(PlayerData player, Scene scene) {
+    void setPlayerData(PlayerData player, Scene scene) throws InterruptedException {
         var size = new SceneSize(scene);
         game = new Game("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         displayWhite = (player.color == backend.Color.WHITE);
@@ -43,18 +46,15 @@ public final class BoardController {
         paintBoard(game, size);
         scene.widthProperty().addListener((observed, oldWidth, width) -> paintBoard(game, new SceneSize(scene)));
         scene.heightProperty().addListener((observed, oldHeight, height) -> paintBoard(game, new SceneSize(scene)));
-        if (player.color == backend.Color.BLACK && player.count == Players.ONE_PLAYER) {
-            state = BotTurn.perform(game, !displayWhite);
-            paintBoard(game, size);
+        if (player.color != backend.Color.BLACK || player.count != Players.ONE_PLAYER) {
+            state = game.generateMoves();
             if (state.isTerminal()) {
-                alertUserTerminatedGame(state, "You have won");
-                return;
+                alertUserTerminatedGame(state, getTerminalMessage());
             }
+            return;
         }
-        state = game.generateMoves();
-        if (state.isTerminal()) {
-            alertUserTerminatedGame(state, getTerminalMessage());
-        }
+        semaphore.acquire();
+        botMove(size);
     }
 
     private String getTerminalMessage() {
@@ -69,27 +69,41 @@ public final class BoardController {
 
     @FXML
     private void onMouseClicked(MouseEvent event) {
-        if (state.isTerminal()) {
+        boolean hadPermit = semaphore.tryAcquire();
+        if (!hadPermit) {
             return;
         }
         var scene = ((Node) event.getSource()).getScene();
         var size = new SceneSize(scene);
         var clickPosition = getClickPosition(size, event);
+        boolean isDone = userMove(size, clickPosition);
+        if (isDone) {
+            semaphore.release();
+            return;
+        }
+        userMove(size, clickPosition);
+        botMove(size);
+    }
+
+    private boolean userMove(SceneSize size, Position clickPosition) {
+        if (state.isTerminal()) {
+            return true;
+        }
         if (moveStart == null) {
             var endPositions = getEndPositions(state, clickPosition);
             if (endPositions.isEmpty()) {
                 moveStart = null;
-                return;
+                return true;
             }
             moveStart = clickPosition;
             paintBoard(game, size, endPositions);
-            return;
+            return true;
         }
         var possibleMoves = getPossibleMoves(state, moveStart, clickPosition);
         moveStart = null;
         if (possibleMoves.isEmpty()) {
             paintBoard(game, size);
-            return;
+            return true;
         }
         var promotions = getPiecePromotions(possibleMoves);
         Piece.Type promoteTo = null;
@@ -102,18 +116,40 @@ public final class BoardController {
             displayWhite = !displayWhite;
         }
         paintBoard(game, size);
-        if (players == Players.ONE_PLAYER) {
-            state = BotTurn.perform(game, !displayWhite);
-            paintBoard(game, size);
+        if (players == Players.TWO_PLAYERS) {
+            state = game.generateMoves();
             if (state.isTerminal()) {
-                alertUserTerminatedGame(state, "You have won");
-                return;
+                alertUserTerminatedGame(state, getTerminalMessage());
             }
+            return true;
         }
-        state = game.generateMoves();
-        if (state.isTerminal()) {
-            alertUserTerminatedGame(state, getTerminalMessage());
-        }
+        return false;
+    }
+
+    private void botMove(SceneSize size) {
+        var botMove = new Task<>() {
+            @Override
+            protected Void call() {
+                state = BotTurn.perform(game, !displayWhite);
+                return null;
+            }
+        };
+        botMove.setOnSucceeded(e -> {
+            try {
+                paintBoard(game, size);
+                if (state.isTerminal()) {
+                    alertUserTerminatedGame(state, "You have won");
+                    return;
+                }
+                state = game.generateMoves();
+                if (state.isTerminal()) {
+                    alertUserTerminatedGame(state, getTerminalMessage());
+                }
+            } finally {
+                semaphore.release();
+            }
+        });
+        new Thread(botMove).start();
     }
 
     private Position getClickPosition(SceneSize size, MouseEvent event) {

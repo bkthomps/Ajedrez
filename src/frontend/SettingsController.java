@@ -46,7 +46,7 @@ public final class SettingsController {
     }
 
     @FXML
-    private void onStartGame(ActionEvent event) throws IOException {
+    private void onStartGame(ActionEvent event) throws IOException, InterruptedException {
         var loader = new FXMLLoader(getClass().getResource("/fxml/board-view.fxml"));
         var scene = new Scene(loader.load());
         var window = (Stage) ((Node) event.getSource()).getScene().getWindow();
