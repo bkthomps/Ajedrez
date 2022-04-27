@@ -113,28 +113,19 @@ public final class Game {
      * A draw due to insufficient mating material occurs when there is a lone king against:
      * 1. a lone king, or
      * 2. a king and a bishop, or
-     * 3. a king and a knight, or
-     * 4. a king and two knights
+     * 3. a king and a knight
      *
      * @return if the game is a draw due to insufficient mating material
      */
     private boolean isInsufficientMaterial() {
-        boolean hasBishop = false;
-        Color knightColor = null;
-        int knightCount = 0;
+        boolean hasMinor = false;
         for (var line : board.squares) {
             for (var piece : line) {
                 if (piece == null || piece.type == Piece.Type.KING) {
                     continue;
                 }
-                if (piece.type == Piece.Type.BISHOP && !hasBishop && knightCount == 0) {
-                    hasBishop = true;
-                    continue;
-                }
-                if (piece.type == Piece.Type.KNIGHT && !hasBishop && knightCount < 2
-                        && (knightColor == null || knightColor == piece.color)) {
-                    knightCount++;
-                    knightColor = piece.color;
+                if (!hasMinor && (piece.type == Piece.Type.KNIGHT || piece.type == Piece.Type.BISHOP)) {
+                    hasMinor = true;
                     continue;
                 }
                 return false;

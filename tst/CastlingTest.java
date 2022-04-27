@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class FenCastlingTest {
+public class CastlingTest {
     private static List<Move> getCastlingMoves(List<Move> moves) {
         var castlingMoves = new ArrayList<Move>();
         for (var move : moves) {
