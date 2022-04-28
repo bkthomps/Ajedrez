@@ -16,6 +16,10 @@ public final class Application extends javafx.application.Application {
         stage.getIcons().add(new Image("BLACK_KING.png"));
         stage.setScene(scene);
         stage.show();
+        var controller = (SettingsController) loader.getController();
+        controller.sizeScene(scene);
+        scene.widthProperty().addListener((observed, oldWidth, width) -> controller.sizeScene(scene));
+        scene.heightProperty().addListener((observed, oldHeight, height) -> controller.sizeScene(scene));
     }
 
     public static void main(String[] args) {

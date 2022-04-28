@@ -6,7 +6,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.RadioButton;
+import javafx.scene.control.Button;
+import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -16,23 +17,66 @@ public final class SettingsController {
     private Players playerCount = Players.ONE_PLAYER;
 
     @FXML
-    private RadioButton white;
+    private Button onePlayerButton;
 
     @FXML
-    private RadioButton black;
+    private Button twoPlayerButton;
+
+    @FXML
+    private Button whiteButton;
+
+    @FXML
+    private Button blackButton;
+
+    @FXML
+    private ImageView onePlayerIcon;
+
+    @FXML
+    private ImageView twoPlayerIcon;
+
+    @FXML
+    private ImageView whiteIcon;
+
+    @FXML
+    private ImageView blackIcon;
+
+    @FXML
+    private ImageView nextIcon;
+
+    void sizeScene(Scene scene) {
+        double height = scene.getHeight();
+        double width = scene.getWidth();
+        double widthPadding = 17;
+        double heightPadding = 26;
+        double halfWidth = width / 2 - widthPadding;
+        double fullWidth = width - widthPadding;
+        double playerCountHeight = 0.35 * height - heightPadding;
+        double playerColorHeight = 0.4 * height - heightPadding;
+        double nextButtonHeight = 0.25 * height - heightPadding;
+        onePlayerIcon.setFitHeight(playerCountHeight);
+        onePlayerIcon.setFitWidth(halfWidth);
+        twoPlayerIcon.setFitHeight(playerCountHeight);
+        twoPlayerIcon.setFitWidth(halfWidth);
+        whiteIcon.setFitHeight(playerColorHeight);
+        whiteIcon.setFitWidth(halfWidth);
+        blackIcon.setFitHeight(playerColorHeight);
+        blackIcon.setFitWidth(halfWidth);
+        nextIcon.setFitHeight(nextButtonHeight);
+        nextIcon.setFitWidth(fullWidth);
+    }
 
     @FXML
     private void onOnePlayer() {
         playerCount = Players.ONE_PLAYER;
-        white.setVisible(true);
-        black.setVisible(true);
+        whiteButton.setDisable(false);
+        blackButton.setDisable(false);
     }
 
     @FXML
     private void onTwoPlayer() {
         playerCount = Players.TWO_PLAYERS;
-        white.setVisible(false);
-        black.setVisible(false);
+        whiteButton.setDisable(true);
+        blackButton.setDisable(true);
     }
 
     @FXML
