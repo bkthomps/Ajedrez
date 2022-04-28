@@ -13,6 +13,9 @@ import javafx.stage.Stage;
 import java.io.IOException;
 
 public final class SettingsController {
+    private static final String IDLE_BUTTON_STYLE = "";
+    private static final String HOVERED_BUTTON_STYLE = "-fx-effect: innershadow(gaussian, rgba(0,0,0,0.7), 20,0,0,0 );";
+
     private Color playerColor = Color.WHITE;
     private Players playerCount = Players.ONE_PLAYER;
 
@@ -63,30 +66,56 @@ public final class SettingsController {
         blackIcon.setFitWidth(halfWidth);
         nextIcon.setFitHeight(nextButtonHeight);
         nextIcon.setFitWidth(fullWidth);
+        refreshButtons();
+    }
+
+    private void refreshButtons() {
+        if (playerCount == Players.TWO_PLAYERS) {
+            whiteButton.setStyle(IDLE_BUTTON_STYLE);
+            blackButton.setStyle(IDLE_BUTTON_STYLE);
+            onePlayerButton.setStyle(IDLE_BUTTON_STYLE);
+            twoPlayerButton.setStyle(HOVERED_BUTTON_STYLE);
+            whiteButton.setDisable(true);
+            blackButton.setDisable(true);
+            return;
+        }
+        if (playerCount == Players.ONE_PLAYER) {
+            onePlayerButton.setStyle(HOVERED_BUTTON_STYLE);
+            twoPlayerButton.setStyle(IDLE_BUTTON_STYLE);
+            whiteButton.setDisable(false);
+            blackButton.setDisable(false);
+        }
+        if (playerColor == Color.WHITE) {
+            whiteButton.setStyle(HOVERED_BUTTON_STYLE);
+            blackButton.setStyle(IDLE_BUTTON_STYLE);
+        } else {
+            whiteButton.setStyle(IDLE_BUTTON_STYLE);
+            blackButton.setStyle(HOVERED_BUTTON_STYLE);
+        }
     }
 
     @FXML
     private void onOnePlayer() {
         playerCount = Players.ONE_PLAYER;
-        whiteButton.setDisable(false);
-        blackButton.setDisable(false);
+        refreshButtons();
     }
 
     @FXML
     private void onTwoPlayer() {
         playerCount = Players.TWO_PLAYERS;
-        whiteButton.setDisable(true);
-        blackButton.setDisable(true);
+        refreshButtons();
     }
 
     @FXML
     private void onWhite() {
         playerColor = Color.WHITE;
+        refreshButtons();
     }
 
     @FXML
     private void onBlack() {
         playerColor = Color.BLACK;
+        refreshButtons();
     }
 
     @FXML
