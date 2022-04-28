@@ -13,8 +13,10 @@ import javafx.stage.Stage;
 import java.io.IOException;
 
 public final class SettingsController {
-    private static final String IDLE_BUTTON_STYLE = "";
-    private static final String HOVERED_BUTTON_STYLE = "-fx-effect: innershadow(gaussian, rgba(0,0,0,0.7), 20,0,0,0 );";
+    private static final String IDLE_BUTTON_STYLE
+            = "-fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
+    private static final String HOVERED_BUTTON_STYLE
+            = IDLE_BUTTON_STYLE + "-fx-effect: innershadow(gaussian, rgba(0,0,0,0.7), 20,0,0,0 );";
 
     private Color playerColor = Color.WHITE;
     private Players playerCount = Players.ONE_PLAYER;
