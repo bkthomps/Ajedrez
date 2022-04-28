@@ -38,6 +38,7 @@ public final class BoardController {
     private Position moveStart;
     private boolean displayWhite;
     private Players players;
+    private Piece[][] boardPieces;
 
     @FXML
     private GridPane board;
@@ -48,8 +49,8 @@ public final class BoardController {
         displayWhite = (player.color == backend.Color.WHITE);
         players = player.count;
         paintBoard(game, size);
-        scene.widthProperty().addListener((observed, oldWidth, width) -> paintBoard(game, new SceneSize(scene)));
-        scene.heightProperty().addListener((observed, oldHeight, height) -> paintBoard(game, new SceneSize(scene)));
+        scene.widthProperty().addListener((observed, oldWidth, width) -> paintLastBoard(new SceneSize(scene)));
+        scene.heightProperty().addListener((observed, oldHeight, height) -> paintLastBoard(new SceneSize(scene)));
         if (player.color != backend.Color.BLACK || player.count != Players.ONE_PLAYER) {
             state = game.generateMoves();
             if (state.isTerminal()) {
@@ -239,16 +240,21 @@ public final class BoardController {
     }
 
     private void paintBoard(Game game, SceneSize size) {
-        paintBoardInternal(game, size, List.of(), !displayWhite);
+        paintBoard(game, size, List.of());
     }
 
     private void paintBoard(Game game, SceneSize size, List<Position> endPositions) {
-        paintBoardInternal(game, size, endPositions, !displayWhite);
+        boardPieces = game.getBoard();
+        paintBoardInternal(boardPieces, size, endPositions, !displayWhite);
     }
 
-    private void paintBoardInternal(Game game, SceneSize size, List<Position> endPositions, boolean isReverse) {
+    private void paintLastBoard(SceneSize size) {
+        paintBoardInternal(boardPieces, size, List.of(), !displayWhite);
+    }
+
+    private void paintBoardInternal(Piece[][] squares, SceneSize size,
+                                    List<Position> endPositions, boolean isReverse) {
         board.getChildren().clear();
-        var squares = game.getBoard();
         for (int i = 0; i < ROW_COUNT; i++) {
             int index = maybeReverse(i, isReverse);
             for (int j = 0; j < COLUMN_COUNT; j++) {
