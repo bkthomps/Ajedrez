@@ -29,6 +29,7 @@ public final class BoardController {
     private static final Color LIGHT_SQUARE = Color.rgb(200, 100, 0);
     private static final Color DARK_HIGHLIGHTED = Color.rgb(180, 160, 140);
     private static final Color LIGHT_HIGHLIGHTED = Color.rgb(200, 160, 140);
+    private static final Color KING_CHECKED = Color.rgb(250, 90, 80);
     private static final Media moveSound = new Media(BoardController.class.getResource("/move.wav").toString());
     private static final Media errorSound = new Media(BoardController.class.getResource("/error.wav").toString());
 
@@ -48,11 +49,12 @@ public final class BoardController {
         game = new Game("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         displayWhite = (player.color == backend.Color.WHITE);
         players = player.count;
-        paintBoard(game, size);
+        paintBoardAfterMove(game, size);
         scene.widthProperty().addListener((observed, oldWidth, width) -> paintLastBoard(new SceneSize(scene)));
         scene.heightProperty().addListener((observed, oldHeight, height) -> paintLastBoard(new SceneSize(scene)));
         if (player.color != backend.Color.BLACK || player.count != Players.ONE_PLAYER) {
             state = game.generateMoves();
+            paintBoard(game, size);
             if (state.isTerminal()) {
                 alertUserTerminatedGame(state, getTerminalMessage());
             }
@@ -121,15 +123,15 @@ public final class BoardController {
         playSound(moveSound);
         if (players == Players.TWO_PLAYERS) {
             displayWhite = !displayWhite;
-        }
-        paintBoard(game, size);
-        if (players == Players.TWO_PLAYERS) {
+            paintBoard(game, size);
             state = game.generateMoves();
+            paintBoard(game, size);
             if (state.isTerminal()) {
                 alertUserTerminatedGame(state, getTerminalMessage());
             }
             return true;
         }
+        paintBoardAfterMove(game, size);
         return false;
     }
 
@@ -150,6 +152,7 @@ public final class BoardController {
                     return;
                 }
                 state = game.generateMoves();
+                paintBoard(game, size);
                 if (state.isTerminal()) {
                     alertUserTerminatedGame(state, getTerminalMessage());
                 }
@@ -243,17 +246,22 @@ public final class BoardController {
         paintBoard(game, size, List.of());
     }
 
+    private void paintBoardAfterMove(Game game, SceneSize size) {
+        boardPieces = game.getBoard();
+        paintBoardInternal(boardPieces, size, List.of(), !displayWhite, false);
+    }
+
     private void paintBoard(Game game, SceneSize size, List<Position> endPositions) {
         boardPieces = game.getBoard();
-        paintBoardInternal(boardPieces, size, endPositions, !displayWhite);
+        paintBoardInternal(boardPieces, size, endPositions, !displayWhite, true);
     }
 
     private void paintLastBoard(SceneSize size) {
-        paintBoardInternal(boardPieces, size, List.of(), !displayWhite);
+        paintBoardInternal(boardPieces, size, List.of(), !displayWhite, true);
     }
 
     private void paintBoardInternal(Piece[][] squares, SceneSize size,
-                                    List<Position> endPositions, boolean isReverse) {
+                                    List<Position> endPositions, boolean isReverse, boolean withCheck) {
         board.getChildren().clear();
         for (int i = 0; i < ROW_COUNT; i++) {
             int index = maybeReverse(i, isReverse);
@@ -263,7 +271,11 @@ public final class BoardController {
                 r.setFill(background);
                 var piece = squares[i][j];
                 if (piece != null) {
-                    var image = getPieceImage(piece, background);
+                    boolean isPieceWhite = (piece.color == backend.Color.WHITE);
+                    boolean isPlayerKing = (piece.type == Piece.Type.KING) && (isPieceWhite == displayWhite);
+                    boolean isKingChecked = withCheck && (state.isTerminal() ? state.isCheckmate() : state.isCheck());
+                    boolean inCheck = isPlayerKing && isKingChecked;
+                    var image = getPieceImage(piece, background, inCheck);
                     r.setFill(image);
                 }
                 board.add(r, j, index);
@@ -289,7 +301,10 @@ public final class BoardController {
         return background;
     }
 
-    private ImagePattern getPieceImage(Piece piece, Color background) {
+    private ImagePattern getPieceImage(Piece piece, Color background, boolean inCheck) {
+        if (inCheck) {
+            System.out.println("in check");
+        }
         var imageName = piece.color + "_" + piece.type + ".png";
         var image = new Image(imageName);
         int w = (int) image.getWidth();
@@ -300,7 +315,19 @@ public final class BoardController {
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
                 var oldPixel = reader.getColor(x, y);
-                var pixel = reader.getColor(x, y).isOpaque() ? oldPixel : background;
+                var pixel = background;
+                if (oldPixel.isOpaque()) {
+                    pixel = oldPixel;
+                    if (inCheck) {
+                        double blackCutoff = 0.4;
+                        double r = oldPixel.getRed();
+                        double g = oldPixel.getGreen();
+                        double b = oldPixel.getBlue();
+                        if (r > blackCutoff && g > blackCutoff && b > blackCutoff) {
+                            pixel = KING_CHECKED;
+                        }
+                    }
+                }
                 writer.setColor(x, y, pixel);
             }
         }
