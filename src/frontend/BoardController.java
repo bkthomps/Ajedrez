@@ -30,8 +30,8 @@ public final class BoardController {
     private static final Color DARK_HIGHLIGHTED = Color.rgb(180, 160, 140);
     private static final Color LIGHT_HIGHLIGHTED = Color.rgb(200, 160, 140);
     private static final Color KING_CHECKED = Color.rgb(250, 90, 80);
-    private static final Media moveSound = new Media(BoardController.class.getResource("/move.wav").toString());
-    private static final Media errorSound = new Media(BoardController.class.getResource("/error.wav").toString());
+    private static final Media MOVE_SOUND = new Media(BoardController.class.getResource("/move.wav").toString());
+    private static final Media ERROR_SOUND = new Media(BoardController.class.getResource("/error.wav").toString());
 
     private final Semaphore semaphore = new Semaphore(1);
     private Game game;
@@ -78,7 +78,7 @@ public final class BoardController {
     private void onMouseClicked(MouseEvent event) {
         boolean hadPermit = semaphore.tryAcquire();
         if (!hadPermit) {
-            playSound(errorSound);
+            playSound(ERROR_SOUND);
             return;
         }
         var scene = ((Node) event.getSource()).getScene();
@@ -120,7 +120,7 @@ public final class BoardController {
         }
         var move = getSelectedMove(possibleMoves, promoteTo);
         move.perform();
-        playSound(moveSound);
+        playSound(MOVE_SOUND);
         if (players == Players.TWO_PLAYERS) {
             displayWhite = !displayWhite;
             paintBoard(game, size);
@@ -140,7 +140,7 @@ public final class BoardController {
             @Override
             protected Void call() {
                 state = BotTurn.perform(game, !displayWhite);
-                playSound(moveSound);
+                playSound(MOVE_SOUND);
                 return null;
             }
         };
