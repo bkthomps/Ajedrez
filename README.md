@@ -5,6 +5,10 @@
 Chess game with one or two players. In either mode, only valid moves can be performed. In one-player mode, minimax
 alpha-beta pruning is used to determine the computer's moves.
 
+<p style="text-align: center;">
+  <img src="https://raw.githubusercontent.com/bkthomps/Ajedrez/master/Gameplay.gif" title="Gameplay" alt="Gameplay of user playing as white against the computer">
+</p>
+
 ## Building
 Java 17 is required. Use `./mvnw javafx:run` to build and run the program. You might need to `chmod +x mvnw` first.
 
