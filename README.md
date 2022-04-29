@@ -5,7 +5,7 @@
 Chess game with one or two players. In either mode, only valid moves can be performed. In one-player mode, minimax
 alpha-beta pruning is used to determine the computer's moves.
 
-<p style="text-align: center;">
+<p align="center">
   <img src="https://raw.githubusercontent.com/bkthomps/Ajedrez/master/Gameplay.gif" width="400" title="Gameplay" alt="Gameplay of user playing as white against the computer">
 </p>
 
