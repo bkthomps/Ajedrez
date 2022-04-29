@@ -28,7 +28,7 @@ same turn
 rook and moving the rook to the other side of the king if both the king and the rook have not yet been moved, there are
 no pieces between the king and the rook, and the king is not in check, will not end up in check, and none of the pieces
 it passes through are attacked by enemy pieces
-3. En Passant - if during the last turn, the other player moved a pawn two squares, the pawn may be captures by the
+3. En Passant - if during the last turn, the other player moved a pawn two squares, the pawn may be captured by the
 player's pawn as if the pawn had only moved one square
 
 ## States
@@ -43,4 +43,4 @@ The following states are terminal and the game immediately ends:
 same player to move, the same en-passant possibility, and the same castling rights
 4. Fifty move rule (draw) - fifty moves have passed without a pawn advancing or a piece being captured
 5. Insufficient mating material (draw) - there is not enough mating material to force a checkmate, this occurs when it
-is a lone kng against a long king, king and knight, or king and bishop
+is a lone king against a long king, king and knight, or king and bishop
