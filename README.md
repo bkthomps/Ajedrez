@@ -1,5 +1,5 @@
 [![GitHubBuild](https://github.com/bkthomps/Ajedrez/workflows/build/badge.svg)](https://github.com/bkthomps/Ajedrez)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/bkthomps/Ven/blob/master/LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/bkthomps/Ajedrez/blob/main/LICENSE)
 
 # Ajedrez
 Chess game with one or two players. In either mode, only valid moves can be performed. In one-player mode, minimax
