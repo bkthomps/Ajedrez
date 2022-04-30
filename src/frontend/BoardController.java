@@ -12,14 +12,14 @@ import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
+import javafx.scene.media.AudioClip;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Semaphore;
 
 public final class BoardController {
@@ -30,8 +30,10 @@ public final class BoardController {
     private static final Color DARK_HIGHLIGHTED = Color.rgb(180, 160, 140);
     private static final Color LIGHT_HIGHLIGHTED = Color.rgb(200, 160, 140);
     private static final Color KING_CHECKED = Color.rgb(250, 90, 80);
-    private static final Media MOVE_SOUND = new Media(BoardController.class.getResource("/move.wav").toString());
-    private static final Media ERROR_SOUND = new Media(BoardController.class.getResource("/error.wav").toString());
+    private static final AudioClip MOVE_SOUND
+            = new AudioClip(Objects.requireNonNull(BoardController.class.getResource("/move.wav")).toExternalForm());
+    private static final AudioClip ERROR_SOUND
+            = new AudioClip(Objects.requireNonNull(BoardController.class.getResource("/error.wav")).toExternalForm());
 
     private final Semaphore semaphore = new Semaphore(1);
     private Game game;
@@ -78,7 +80,7 @@ public final class BoardController {
     private void onMouseClicked(MouseEvent event) {
         boolean hadPermit = semaphore.tryAcquire();
         if (!hadPermit) {
-            playSound(ERROR_SOUND);
+            ERROR_SOUND.play();
             return;
         }
         var scene = ((Node) event.getSource()).getScene();
@@ -120,7 +122,7 @@ public final class BoardController {
         }
         var move = getSelectedMove(possibleMoves, promoteTo);
         move.perform();
-        playSound(MOVE_SOUND);
+        MOVE_SOUND.play();
         if (players == Players.TWO_PLAYERS) {
             displayWhite = !displayWhite;
             paintBoard(game, size);
@@ -140,12 +142,12 @@ public final class BoardController {
             @Override
             protected Void call() {
                 state = BotTurn.perform(game, !displayWhite);
-                playSound(MOVE_SOUND);
                 return null;
             }
         };
         botMove.setOnSucceeded(e -> {
             try {
+                MOVE_SOUND.play();
                 paintBoard(game, size);
                 if (state.isTerminal()) {
                     alertUserTerminatedGame(state, "You have won");
@@ -235,11 +237,6 @@ public final class BoardController {
         }
         var alert = new Alert(Alert.AlertType.NONE, message, ButtonType.OK);
         alert.showAndWait();
-    }
-
-    private void playSound(Media sound) {
-        var mediaPlayer = new MediaPlayer(sound);
-        mediaPlayer.play();
     }
 
     private void paintBoard(Game game, SceneSize size) {
