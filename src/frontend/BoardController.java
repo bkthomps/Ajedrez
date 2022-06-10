@@ -148,7 +148,7 @@ public final class BoardController {
         botMove.setOnSucceeded(e -> {
             try {
                 MOVE_SOUND.play();
-                paintBoard(game, size);
+                paintBoardAfterMove(game, size);
                 if (state.isTerminal()) {
                     alertUserTerminatedGame(state, "You have won");
                     return;
