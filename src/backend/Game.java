@@ -21,6 +21,17 @@ public final class Game {
         return squares;
     }
 
+    public int castleOpportunities(Color color) {
+        int opportunities = 0;
+        if (board.shortCastleRights.get(color.bitIndex())) {
+            opportunities++;
+        }
+        if (board.longCastleRights.get(color.bitIndex())) {
+            opportunities++;
+        }
+        return opportunities;
+    }
+
     public long getZobristHash() {
         return board.zobrist.getHash();
     }

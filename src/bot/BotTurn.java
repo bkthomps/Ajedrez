@@ -38,6 +38,8 @@ public final class BotTurn {
     private static final int ROOK_VALUE = 500;
     private static final int QUEEN_VALUE = 900;
 
+    private static final int CASTLE_OPPORTUNITY_VALUE = 25;
+
     public static State perform(Game game, boolean isBotWhite) {
         var state = game.generateMoves();
         if (state.isTerminal()) {
@@ -82,7 +84,7 @@ public final class BotTurn {
             return transpositions.get(zobristHash);
         }
         if (depth <= 0 && !move.hasCapture()) {
-            int value = evaluate(game.getBoard(), isBotWhite);
+            int value = evaluate(game, isBotWhite);
             transpositions.put(zobristHash, value);
             return value;
         }
@@ -109,7 +111,8 @@ public final class BotTurn {
         return alpha;
     }
 
-    private static int evaluate(Piece[][] squares, boolean isWhite) {
+    private static int evaluate(Game game, boolean isWhite) {
+        var squares = game.getBoard();
         var queenCount = new int[]{0, 0};
         var rookCount = new int[]{0, 0};
         var minorCount = new int[]{0, 0};
@@ -156,6 +159,8 @@ public final class BotTurn {
                 && isLateGame(queenCount[1], rookCount[1], minorCount[1]);
         totalValue += PieceSquareTables.evaluate(squares, kings[0].row, kings[0].column, isLateGame);
         totalValue -= PieceSquareTables.evaluate(squares, kings[1].row, kings[1].column, isLateGame);
+        totalValue += CASTLE_OPPORTUNITY_VALUE * game.castleOpportunities(Color.WHITE);
+        totalValue -= CASTLE_OPPORTUNITY_VALUE * game.castleOpportunities(Color.BLACK);
         return isWhite ? totalValue : -totalValue;
     }
 
