@@ -10,9 +10,7 @@ alpha-beta pruning is used to determine the computer's moves.
 </p>
 
 ## Building
-Java 17 or above is required, and can be installed here: https://jdk.java.net/
-
-Use `./mvnw javafx:run` to build and run the program. You might need to `chmod +x mvnw` first.
+Java 17 or above is required. Run `make` to build and run the program.
 
 ## Moves
 There are six pieces:

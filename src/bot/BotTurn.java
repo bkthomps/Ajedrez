@@ -52,19 +52,17 @@ public final class BotTurn {
         outer:
         for (int depth = 0; ; depth++) {
             var transpositions = new HashMap<Long, Integer>();
-            for (int i = 0; i < choices.size(); i++) {
-                var choice = choices.get(i);
+            for (var choice : choices) {
                 choice.evaluation = -evaluateSearch(
                         game, transpositions, choice.move, start,
                         !isBotWhite, depth, -Integer.MAX_VALUE, Integer.MAX_VALUE
                 );
                 if (System.nanoTime() - start > MAX_NANO_WAIT) {
-                    System.out.println("Aborting depth " + depth + " after " + i * 100 / choices.size() + " percent");
+                    System.out.println("Searched to depth " + (depth - 1));
                     break outer;
                 }
             }
             choices.sort(Comparator.comparing(MoveQuality::getEvaluation).reversed());
-            System.out.println("Finished depth of " + depth);
         }
         return choices.get(0).move;
     }

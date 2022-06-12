@@ -108,8 +108,7 @@ final class PieceSquareTables {
                         }
                     }
                 }
-                int factor = (piece.color == Color.WHITE) ? 1 : -1;
-                totalValue += factor * value;
+                totalValue += (piece.color == Color.WHITE) ? value : -value;
             }
         }
         return totalValue;
