@@ -45,7 +45,7 @@ public class FenSmokeTest {
         var state = new Game(fen).generateMoves();
         assertTrue(state.isTerminal());
         assertTrue(state.isTie());
-        assertTrue(state.terminalMessage().contains("stalemate"));
+        assertTrue(state.terminalType().contains("stalemate"));
     }
 
     @Test

@@ -17,12 +17,12 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 
 public final class BoardController {
+    private static final ResourceBundle RESOURCE = ResourceBundle.getBundle("i18n/ajedrez", Locale.getDefault());
+
     static final int ROW_COUNT = 8;
     static final int COLUMN_COUNT = 8;
     private static final Color DARK_SQUARE = Color.rgb(160, 80, 0);
@@ -68,12 +68,12 @@ public final class BoardController {
 
     private String getTerminalMessage() {
         if (players == Players.ONE_PLAYER) {
-            return "You have lost";
+            return RESOURCE.getString("userLost");
         }
         if (displayWhite) {
-            return "Black has won";
+            return RESOURCE.getString("blackWon");
         }
-        return "White has won";
+        return RESOURCE.getString("whiteWon");
     }
 
     @FXML
@@ -150,7 +150,7 @@ public final class BoardController {
                 MOVE_SOUND.play();
                 paintBoardAfterMove(game, size);
                 if (state.isTerminal()) {
-                    alertUserTerminatedGame(state, "You have won");
+                    alertUserTerminatedGame(state, RESOURCE.getString("userWon"));
                     return;
                 }
                 state = game.generateMoves();
@@ -204,9 +204,9 @@ public final class BoardController {
         Piece.Type promoteTo = null;
         var buttons = new ButtonType[promotions.size()];
         for (int i = 0; i < buttons.length; i++) {
-            buttons[i] = new ButtonType(promotions.get(i).toString());
+            buttons[i] = new ButtonType(RESOURCE.getString(promotions.get(i).toString().toLowerCase()));
         }
-        var alert = new Alert(Alert.AlertType.NONE, "What should this pawn be promoted to?", buttons);
+        var alert = new Alert(Alert.AlertType.NONE, RESOURCE.getString("pawnPromotion"), buttons);
         var result = alert.showAndWait();
         var button = result.orElse(buttons[0]);
         for (int i = 0; i < buttons.length; i++) {
@@ -231,10 +231,11 @@ public final class BoardController {
     private void alertUserTerminatedGame(State state, String winStatus) {
         String message;
         if (state.isCheckmate()) {
-            message = winStatus + " the game due to " + state.terminalMessage();
+            message = winStatus;
         } else {
-            message = "You have tied the game due to " + state.terminalMessage();
+            message = RESOURCE.getString("userTied");
         }
+        message += " " + RESOURCE.getString("theGame") + " " + RESOURCE.getString(state.terminalType());
         var alert = new Alert(Alert.AlertType.NONE, message, ButtonType.OK);
         alert.showAndWait();
     }

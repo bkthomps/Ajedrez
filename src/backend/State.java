@@ -50,13 +50,13 @@ public final class State {
         return !isCheckmate();
     }
 
-    public String terminalMessage() {
+    public String terminalType() {
         return switch (stateType) {
             case CHECKMATE -> "checkmate";
             case STALEMATE -> "stalemate";
-            case DRAW_INSUFFICIENT_MATING -> "insufficient mating material";
-            case DRAW_THREEFOLD_REPETITION -> "threefold repetition of the board";
-            case DRAW_FIFTY_MOVE_RULE -> "fifty moves without captures or pawn movement";
+            case DRAW_INSUFFICIENT_MATING -> "insufficientMatingMaterial";
+            case DRAW_THREEFOLD_REPETITION -> "threefoldRepetition";
+            case DRAW_FIFTY_MOVE_RULE -> "fiftyMoveRule";
             default -> throw new IllegalStateException("Must be in a terminal state.");
         };
     }
