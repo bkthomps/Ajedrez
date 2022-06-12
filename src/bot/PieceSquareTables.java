@@ -70,11 +70,6 @@ final class PieceSquareTables {
             new int[]{ 20,  30,  10,   0,   0,  10,  30,  20},
     };
 
-    /*
-     * Use this table for the king if:
-     *   1. Both sides have no queens, or
-     *   2. Every side which has a queen has one minor piece maximum
-     */
     private static final int[][] LATE_GAME_KING = new int[][]{
             new int[]{-50, -40, -30, -20, -20, -30, -40, -50},
             new int[]{-30, -20, -10,   0,   0, -10, -20, -30},
@@ -86,29 +81,37 @@ final class PieceSquareTables {
             new int[]{-50, -30, -30, -30, -30, -30, -30, -50},
     };
 
-    static int evaluate(Piece[][] squares, int row, int column, boolean isLateGame) {
-        var piece = squares[row][column];
-        if (piece.color != Color.WHITE) {
-            row = squares.length - 1 - row;
-        }
-        switch (piece.type) {
-            case PAWN:
-                return PAWN[row][column];
-            case KNIGHT:
-                return KNIGHT[row][column];
-            case BISHOP:
-                return BISHOP[row][column];
-            case ROOK:
-                return ROOK[row][column];
-            case QUEEN:
-                return QUEEN[row][column];
-            case KING:
-                if (isLateGame) {
-                    return LATE_GAME_KING[row][column];
+    static int evaluate(Piece[][] squares, boolean isLateGame) {
+        int totalValue = 0;
+        for (int i = 0; i < squares.length; i++) {
+            for (int column = 0; column < squares[i].length; column++) {
+                int row = i;
+                var piece = squares[row][column];
+                if (piece == null) {
+                    continue;
                 }
-                return EARLY_GAME_KING[row][column];
-            default:
-                throw new IllegalStateException("Invalid piece type for evaluation");
+                if (piece.color != Color.WHITE) {
+                    row = squares.length - 1 - row;
+                }
+                int value = 0;
+                switch (piece.type) {
+                    case PAWN -> value += PAWN[row][column];
+                    case KNIGHT -> value += KNIGHT[row][column];
+                    case BISHOP -> value += BISHOP[row][column];
+                    case ROOK -> value += ROOK[row][column];
+                    case QUEEN -> value += QUEEN[row][column];
+                    case KING -> {
+                        if (isLateGame) {
+                            value += LATE_GAME_KING[row][column];
+                        } else {
+                            value += EARLY_GAME_KING[row][column];
+                        }
+                    }
+                }
+                int factor = (piece.color == Color.WHITE) ? 1 : -1;
+                totalValue += factor * value;
+            }
         }
+        return totalValue;
     }
 }

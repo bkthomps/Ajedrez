@@ -299,9 +299,6 @@ public final class BoardController {
     }
 
     private ImagePattern getPieceImage(Piece piece, Color background, boolean inCheck) {
-        if (inCheck) {
-            System.out.println("in check");
-        }
         var imageName = piece.color + "_" + piece.type + ".png";
         var image = new Image(imageName);
         int w = (int) image.getWidth();

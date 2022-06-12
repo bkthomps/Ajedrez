@@ -32,14 +32,6 @@ public final class BotTurn {
         }
     }
 
-    private static final int PAWN_VALUE = 100;
-    private static final int KNIGHT_VALUE = 320;
-    private static final int BISHOP_VALUE = 330;
-    private static final int ROOK_VALUE = 500;
-    private static final int QUEEN_VALUE = 900;
-
-    private static final int CASTLE_OPPORTUNITY_VALUE = 25;
-
     public static State perform(Game game, boolean isBotWhite) {
         var state = game.generateMoves();
         if (state.isTerminal()) {
@@ -113,58 +105,10 @@ public final class BotTurn {
 
     private static int evaluate(Game game, boolean isWhite) {
         var squares = game.getBoard();
-        var queenCount = new int[]{0, 0};
-        var rookCount = new int[]{0, 0};
-        var minorCount = new int[]{0, 0};
-        var kings = new Position[]{null, null};
-        int totalValue = 0;
-        for (int i = 0; i < squares.length; i++) {
-            for (int j = 0; j < squares[i].length; j++) {
-                var piece = squares[i][j];
-                if (piece == null) {
-                    continue;
-                }
-                int value = 0;
-                switch (piece.type) {
-                    case PAWN -> value += PAWN_VALUE;
-                    case KNIGHT -> {
-                        value += KNIGHT_VALUE;
-                        minorCount[piece.color.bitIndex()]++;
-                    }
-                    case BISHOP -> {
-                        value += BISHOP_VALUE;
-                        minorCount[piece.color.bitIndex()]++;
-                    }
-                    case ROOK -> {
-                        value += ROOK_VALUE;
-                        rookCount[piece.color.bitIndex()]++;
-                    }
-                    case QUEEN -> {
-                        value += QUEEN_VALUE;
-                        queenCount[piece.color.bitIndex()]++;
-                    }
-                    case KING -> kings[piece.color.bitIndex()] = new Position(i, j);
-                }
-                if (piece.type != Piece.Type.KING) {
-                    value += PieceSquareTables.evaluate(squares, i, j, false);
-                }
-                int factor = (piece.color == Color.WHITE) ? 1 : -1;
-                totalValue += factor * value;
-            }
-        }
-        if (kings[0] == null || kings[1] == null) {
-            throw new IllegalStateException("No king found");
-        }
-        boolean isLateGame = isLateGame(queenCount[0], rookCount[0], minorCount[0])
-                && isLateGame(queenCount[1], rookCount[1], minorCount[1]);
-        totalValue += PieceSquareTables.evaluate(squares, kings[0].row, kings[0].column, isLateGame);
-        totalValue -= PieceSquareTables.evaluate(squares, kings[1].row, kings[1].column, isLateGame);
-        totalValue += CASTLE_OPPORTUNITY_VALUE * game.castleOpportunities(Color.WHITE);
-        totalValue -= CASTLE_OPPORTUNITY_VALUE * game.castleOpportunities(Color.BLACK);
+        int totalValue = MaterialWorth.evaluate(squares);
+        boolean isLateGame = MaterialWorth.isLateGame;
+        totalValue += PieceSquareTables.evaluate(squares, isLateGame);
+        totalValue += CastleOpportunity.evaluate(game);
         return isWhite ? totalValue : -totalValue;
-    }
-
-    private static boolean isLateGame(int queenCount, int rookCount, int minorCount) {
-        return queenCount == 0 || (queenCount == 1 && rookCount == 0 && minorCount <= 1);
     }
 }
