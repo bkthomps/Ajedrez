@@ -5,6 +5,7 @@ import backend.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 public final class BotTurn {
     private static final int MAX_WAIT_SECONDS = 3;
@@ -56,34 +57,55 @@ public final class BotTurn {
     }
 
     private Move getBestMoveChoice(List<MoveQuality> choices) {
-        for (var choice : choices) {
-            var move = choice.move;
-            move.perform();
-            choice.evaluation = -search(3);
-            move.undo();
+        System.out.println();
+        var startTime = System.nanoTime();
+        for (int depth = 0; ; depth++) {
+            boolean furtherDepth = getBestChoicesInPlace(choices, depth, startTime);
+            if (!furtherDepth) {
+                break;
+            }
         }
-        choices.sort(Comparator.comparing(MoveQuality::getEvaluation).reversed());
-        System.out.println(choices);
         return choices.get(0).move;
     }
 
-    private int search(int depth) {
+    private boolean getBestChoicesInPlace(List<MoveQuality> choices, int depth, long startTime) {
+        for (var choice : choices) {
+            var move = choice.move;
+            move.perform();
+            var evaluation = search(depth, startTime);
+            evaluation.ifPresent(eval -> choice.evaluation = -eval);
+            move.undo();
+            if (evaluation.isEmpty()) {
+                return false;
+            }
+        }
+        choices.sort(Comparator.comparing(MoveQuality::getEvaluation).reversed());
+        System.out.println("Searched to depth " + depth + ": " + choices);
+        return true;
+    }
+
+    private Optional<Integer> search(int depth, long startTime) {
         if (depth == 0) {
-            return evaluate();
+            return Optional.of(evaluate());
+        }
+        if (System.nanoTime() - startTime > MAX_NANO_WAIT) {
+            return Optional.empty();
         }
         var state = game.generateMoves();
         if (state.isTerminal()) {
-            return state.isCheckmate() ? -Integer.MAX_VALUE : 0;
+            return Optional.of(state.isCheckmate() ? -Integer.MAX_VALUE : 0);
         }
         var moves = state.moves();
         int bestEvaluation = -Integer.MAX_VALUE;
         for (var move : moves) {
             move.perform();
-            int evaluation = -search(depth - 1);
+            var evaluation = search(depth - 1, startTime);
             move.undo();
-            bestEvaluation = Math.max(bestEvaluation, evaluation);
+            if (evaluation.isPresent()) {
+                bestEvaluation = Math.max(bestEvaluation, -evaluation.get());
+            }
         }
-        return bestEvaluation;
+        return Optional.of(bestEvaluation);
     }
 
     private int evaluate() {
