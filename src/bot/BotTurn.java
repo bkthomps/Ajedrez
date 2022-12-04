@@ -72,7 +72,7 @@ public final class BotTurn {
         for (var choice : choices) {
             var move = choice.move;
             move.perform();
-            var evaluation = search(depth, startTime);
+            var evaluation = search(depth, startTime, -Integer.MAX_VALUE, Integer.MAX_VALUE);
             evaluation.ifPresent(eval -> choice.evaluation = -eval);
             move.undo();
             if (evaluation.isEmpty()) {
@@ -84,7 +84,7 @@ public final class BotTurn {
         return true;
     }
 
-    private Optional<Integer> search(int depth, long startTime) {
+    private Optional<Integer> search(int depth, long startTime, int alpha, int beta) {
         if (depth == 0) {
             return Optional.of(evaluate());
         }
@@ -96,16 +96,19 @@ public final class BotTurn {
             return Optional.of(state.isCheckmate() ? -Integer.MAX_VALUE : 0);
         }
         var moves = state.moves();
-        int bestEvaluation = -Integer.MAX_VALUE;
         for (var move : moves) {
             move.perform();
-            var evaluation = search(depth - 1, startTime);
+            var evaluation = search(depth - 1, startTime, -beta, -alpha);
             move.undo();
             if (evaluation.isPresent()) {
-                bestEvaluation = Math.max(bestEvaluation, -evaluation.get());
+                var eval = -evaluation.get();
+                if (eval >= beta) {
+                    return Optional.of(beta);
+                }
+                alpha = Math.max(alpha, eval);
             }
         }
-        return Optional.of(bestEvaluation);
+        return Optional.of(alpha);
     }
 
     private int evaluate() {
