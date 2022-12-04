@@ -141,7 +141,7 @@ public final class BoardController {
         var botMove = new Task<>() {
             @Override
             protected Void call() {
-                state = BotTurn.perform(game, !displayWhite);
+                state = BotTurn.perform(game);
                 return null;
             }
         };
