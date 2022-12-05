@@ -13,6 +13,10 @@ public final class Game {
         board = new Board(fen);
     }
 
+    public Color getActivePlayer() {
+        return board.activePlayer;
+    }
+
     public Piece[][] getBoard() {
         var squares = new Piece[Board.ROW_COUNT][Board.COLUMN_COUNT];
         for (int i = 0; i < Board.ROW_COUNT; i++) {
