@@ -27,8 +27,6 @@ public abstract class Move {
         return piece.color + " " + piece.type + " " + start + " -> " + end;
     }
 
-    public abstract boolean hasCapture();
-
     public abstract Optional<Piece.Type> promotionPieceType();
 
     public void perform() {
@@ -118,11 +116,6 @@ final class Castling extends Move {
     }
 
     @Override
-    public boolean hasCapture() {
-        return false;
-    }
-
-    @Override
     public Optional<Piece.Type> promotionPieceType() {
         return Optional.empty();
     }
@@ -192,11 +185,6 @@ final class PawnPromotion extends Move {
     }
 
     @Override
-    public boolean hasCapture() {
-        return captured != null;
-    }
-
-    @Override
     public Optional<Piece.Type> promotionPieceType() {
         return Optional.of(promotion.type);
     }
@@ -239,11 +227,6 @@ final class EnPassant extends Move {
     }
 
     @Override
-    public boolean hasCapture() {
-        return captured != null;
-    }
-
-    @Override
     public Optional<Piece.Type> promotionPieceType() {
         return Optional.empty();
     }
@@ -281,11 +264,6 @@ class RegularMove extends Move {
 
     RegularMove(Board board, Position start, Position end) {
         super(board, start, end);
-    }
-
-    @Override
-    public boolean hasCapture() {
-        return captured != null;
     }
 
     @Override
