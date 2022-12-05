@@ -4,7 +4,9 @@ import backend.*;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public final class BotTurn {
@@ -60,7 +62,8 @@ public final class BotTurn {
         System.out.println();
         var startTime = System.nanoTime();
         for (int depth = 0; ; depth++) {
-            boolean furtherDepth = getBestChoicesInPlace(choices, depth, startTime);
+            var transpositions = new HashMap<Long, Integer>();
+            boolean furtherDepth = getBestChoicesInPlace(choices, depth, startTime, transpositions);
             if (!furtherDepth) {
                 break;
             }
@@ -68,11 +71,12 @@ public final class BotTurn {
         return choices.get(0).move;
     }
 
-    private boolean getBestChoicesInPlace(List<MoveQuality> choices, int depth, long startTime) {
+    private boolean getBestChoicesInPlace(List<MoveQuality> choices, int depth, long startTime,
+                                          Map<Long, Integer> transpositions) {
         for (var choice : choices) {
             var move = choice.move;
             move.perform();
-            var evaluation = search(depth, startTime, -Integer.MAX_VALUE, Integer.MAX_VALUE);
+            var evaluation = search(depth, startTime, -Integer.MAX_VALUE, Integer.MAX_VALUE, transpositions);
             evaluation.ifPresent(eval -> choice.evaluation = -eval);
             move.undo();
             if (evaluation.isEmpty()) {
@@ -84,9 +88,16 @@ public final class BotTurn {
         return true;
     }
 
-    private Optional<Integer> search(int depth, long startTime, int alpha, int beta) {
+    private Optional<Integer> search(int depth, long startTime, int alpha, int beta,
+                                     Map<Long, Integer> transpositions) {
+        var zobristHash = game.getZobristHash() + depth;
+        if (transpositions.containsKey(zobristHash)) {
+            return Optional.of(transpositions.get(zobristHash));
+        }
         if (depth == 0) {
-            return Optional.of(evaluate());
+            var value = evaluate();
+            transpositions.put(zobristHash, value);
+            return Optional.of(value);
         }
         if (System.nanoTime() - startTime > MAX_NANO_WAIT) {
             return Optional.empty();
@@ -98,7 +109,7 @@ public final class BotTurn {
         var moves = state.moves();
         for (var move : moves) {
             move.perform();
-            var evaluation = search(depth - 1, startTime, -beta, -alpha);
+            var evaluation = search(depth - 1, startTime, -beta, -alpha, transpositions);
             move.undo();
             if (evaluation.isPresent()) {
                 var eval = -evaluation.get();
