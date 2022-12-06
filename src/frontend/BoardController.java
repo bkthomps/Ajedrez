@@ -167,8 +167,10 @@ public final class BoardController {
 
     private Position getClickPosition(SceneSize size, MouseEvent event) {
         int column = (int) (event.getX() / size.width);
+        column = maybeReverse(COLUMN_COUNT, column, !displayWhite);
         int row = (int) (event.getY() / size.height);
-        return new Position(maybeReverse(row, !displayWhite), column);
+        row = maybeReverse(ROW_COUNT, row, !displayWhite);
+        return new Position(row, column);
     }
 
     private List<Position> getEndPositions(State state, Position clickPosition) {
@@ -262,8 +264,9 @@ public final class BoardController {
                                     List<Position> endPositions, boolean isReverse, boolean withCheck) {
         board.getChildren().clear();
         for (int i = 0; i < ROW_COUNT; i++) {
-            int index = maybeReverse(i, isReverse);
+            int row = maybeReverse(ROW_COUNT, i, isReverse);
             for (int j = 0; j < COLUMN_COUNT; j++) {
+                int column = maybeReverse(COLUMN_COUNT, j, isReverse);
                 var r = new Rectangle(size.width, size.height);
                 var background = getBackground(i, j, endPositions);
                 r.setFill(background);
@@ -276,23 +279,24 @@ public final class BoardController {
                     var image = getPieceImage(piece, background, inCheck);
                     r.setFill(image);
                 }
-                board.add(r, j, index);
+                board.add(r, column, row);
             }
         }
     }
 
-    private int maybeReverse(int index, boolean isReverse) {
+    private int maybeReverse(int count, int index, boolean isReverse) {
         if (!isReverse) {
             return index;
         }
-        return ROW_COUNT - 1 - index;
+        return count - 1 - index;
     }
 
     private Color getBackground(int i, int j, List<Position> endPositions) {
-        var background = (i + j) % 2 == 0 ? LIGHT_SQUARE : DARK_SQUARE;
+        boolean isLightSquare = (i + j) % 2 == 0;
+        var background = isLightSquare ? LIGHT_SQUARE : DARK_SQUARE;
         for (var end : endPositions) {
             if (end.row == i && end.column == j) {
-                background = (i + j) % 2 == 0 ? LIGHT_HIGHLIGHTED : DARK_HIGHLIGHTED;
+                background = isLightSquare ? LIGHT_HIGHLIGHTED : DARK_HIGHLIGHTED;
                 break;
             }
         }
